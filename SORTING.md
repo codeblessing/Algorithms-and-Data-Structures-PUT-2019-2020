@@ -7,7 +7,7 @@ Każdy algorytm sortowania ma własny plik.
 
 ### Insertion Sort
 
-Kod źródłowy znajduje się w pliku </sorting/src/insertion.rs>
+Kod źródłowy znajduje się w pliku <sorting/src/insertion.rs>
 
 ### Shell Sort z przyrostami Knutha
 

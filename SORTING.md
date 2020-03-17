@@ -7,20 +7,20 @@ Każdy algorytm sortowania ma własny plik.
 
 ### Insertion Sort
 
-Kod źródłowy znajduje się w pliku <sorting/src/insertion.rs>
+Kod źródłowy znajduje się w pliku [insertion.rs](sorting/src/insertion.rs)
 
 ### Shell Sort z przyrostami Knutha
 
-Kod źródłowy znajduje się w pliku <./sorting/src/shell.rs>.
+Kod źródłowy znajduje się w pliku [shell.rs](sorting/src/shell.rs).
 
 ### Heap Sort
 
-Kod źródłowy znajduje się w pliku <./sorting/src/heap.rs>.
+Kod źródłowy znajduje się w pliku [heap.rs](sorting/src/heap.rs).
 
 ### Merge Sort
 
-Kod źródłowy znajduje się w pliku <./sorting/src/merge.rs>.
+Kod źródłowy znajduje się w pliku [merge.rs](sorting/src/merge.rs).
 
 ### Quick Sort
 
-Kod źródłowy znajduje się w pliku <./sorting/src/quick.rs>.
+Kod źródłowy znajduje się w pliku [quick.rs](sorting/src/quick.rs).

@@ -139,7 +139,9 @@ Ordered:
 
 Comparisons: {}
 Swaps: {}
-Time: {}",
+Time: {}
+
+",
             unordered,
             is_ordered.0,
             is_ordered.1,
@@ -214,24 +216,36 @@ fn setup() -> Config {
                 .short("i")
                 .long("input")
                 .value_name("INPUT")
-                .takes_value(true),
+                .takes_value(true)
+                .help("Path to input file. If file not exists is skipped."),
         )
         .arg(
             Arg::with_name("output")
                 .short("o")
                 .long("output")
                 .value_name("OUTPUT")
-                .takes_value(true),
+                .takes_value(true)
+                .help("Path to output file. If file not exists it's created."),
         )
         .arg(
             Arg::with_name("size")
                 .short("s")
                 .long("size")
                 .value_name("SIZE")
-                .takes_value(true),
+                .takes_value(true)
+                .help("size of generated array. Use with -g switch."),
         )
-        .arg(Arg::with_name("append").short("a").long("append"))
-        .arg(Arg::with_name("generate").short("g").long("generate"))
+        .arg(
+            Arg::with_name("append")
+                .short("a")
+                .long("append")
+                .help("appends output to end of results file instead of overwriting it."),
+        )
+        .arg(
+            Arg::with_name("generate")
+                .short("g")
+                .long("generate")
+                .help("generates array of random numbers from range -10 000 - 10 000. Skipped if correct -i is given."))
         .get_matches();
 
     let mut config = Config::new();

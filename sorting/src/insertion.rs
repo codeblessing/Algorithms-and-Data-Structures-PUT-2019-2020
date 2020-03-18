@@ -20,7 +20,7 @@ pub fn sort(data: &Vec<i32>, comparator: impl Fn(&i32, &i32) -> i32) -> (Vec<i32
             comparisons += 1;
 
             // If element is less than or equal to compared item it should go right before it.
-            // Warning! This move makes this implementation unstable. To "stabilize" differenciate "less" ordering
+            // Warning! This move makes this implementation unstable. To "stabilize" differentiate "less" ordering
             // from "equal" ordering.
             // `insert` inserts given element at given index and shifts all elements with equal/higher index to right.
             if compare <= 0 {

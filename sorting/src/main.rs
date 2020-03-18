@@ -3,7 +3,8 @@ use rand::Rng;
 use std::fs::*;
 use std::io::*;
 use std::path::Path;
-use std::time::Instant;
+use std::str::FromStr;
+use std::time::{Duration, Instant};
 use ToString;
 
 mod log;
@@ -13,7 +14,7 @@ mod errors;
 mod heap;
 mod insertion;
 mod merge;
-mod quick_sort;
+mod quick;
 mod shell;
 
 fn main() {
@@ -31,56 +32,177 @@ fn main() {
             eprintln!("Input error: {}", err);
             0
         });
-        let content: Vec<String> = content.lines().map(ToString::to_string).collect();
+        unordered = content
+            .split_ascii_whitespace()
+            .map(|val| i32::from_str(val).unwrap_or(std::i32::MIN))
+            .filter(|&val| val != std::i32::MIN)
+            .collect();
+    } else if args.generate {
+        for _ in 0..args.size {
+            unordered.push(rand::thread_rng().gen_range(-100000, 100000));
+        }
+    } else {
+        let mut content = String::new();
+        println!("Podaj liczby (oddzielone spacją) i naciśnij enter:");
+        stdin().read_to_string(&mut content).unwrap_or_else(|err| {
+            eprintln!("Input error: {}", err);
+            0
+        });
+        unordered = content
+            .split_ascii_whitespace()
+            .map(|val| i32::from_str(val).unwrap_or(std::i32::MIN))
+            .filter(|&val| val != std::i32::MIN)
+            .collect()
     }
-    for _ in 0..args.size {
-        unordered.push(rand::thread_rng().gen_range(-100000, 100000));
+
+    if unordered.len() < 1 {
+        return;
     }
 
     fn compare(first: &i32, second: &i32) -> i32 {
-        second - first
+        if *second as i64 > (std::i32::MIN + first) as i64 {
+            second - first
+        } else {
+            -1
+        }
     };
 
     let mut start_time = Instant::now();
     let is_ordered = insertion::sort(&unordered, &compare);
     let is_time = Instant::now().duration_since(start_time);
 
-    // let mut knuth_index = ((((2 * unordered.len()) / 3) + 1) as f32).log(3f32) as u32;
+    let mut knuth_index = ((((2 * unordered.len()) / 3) + 1) as f32).log(3f32) as u32;
 
-    // let ks_start_time = Instant::now();
-    // let ks_ordered = shell::sort(&unordered, &mut knuth_index, &compare);
-    // let ks_time = Instant::now().duration_since(ks_start_time);
+    let ks_start_time = Instant::now();
+    let ks_ordered = shell::sort(&unordered, &mut knuth_index, &compare);
+    let ks_time = Instant::now().duration_since(ks_start_time);
 
-    // let cs_start_time = Instant::now();
-    // let cs_ordered = knuth_shellsort::classic_shellsort(&unordered, &compare);
-    // let cs_time = Instant::now().duration_since(cs_start_time);
+    start_time = Instant::now();
+    let qs_ordered = quick::sort(&unordered, &compare);
+    let qs_time = Instant::now().duration_since(start_time);
 
     start_time = Instant::now();
     let hs_ordered = heap::sort(&unordered, heap::HeapType::MAX);
     let hs_time = Instant::now().duration_since(start_time);
 
     start_time = Instant::now();
-    let qs_ordered = quick_sort::sort(&unordered, &compare);
-    let qs_time = Instant::now().duration_since(start_time);
+    let ms_ordered = merge::sort(&unordered, &compare);
+    let ms_time = Instant::now().duration_since(start_time);
 
-    log.log(format!("[Unordered]\n{:?}\n\n", unordered).as_str());
     log.log(
         format!(
-            r"[Insertion Sort]
+            r"[Unordered]
+{:?}
+
+
+[Insertion Sort]
 Ordered:
 {:?}
 
 Comparisons: {}
 Swaps: {}
-Time: {}ns
-",
+Time: {}
+
+
+[Shell Sort]
+Ordered:
+{:?}
+
+Deltas (in order): {:?}
+Comparisons: {}
+Swaps: {}
+Time: {}
+
+
+[Quick Sort]
+Ordered:
+{:?}
+
+Pivots (in order): {:?}
+Comparisons: {}
+Swaps: {}
+Time: {}
+
+
+[Merge Sort]
+Ordered:
+{:?}
+
+Comparisons: {}
+Swaps: {}
+Time: {}
+
+
+[Heap Sort]
+Ordered:
+{:?}
+
+Comparisons: {}
+Swaps: {}
+Time: {}",
+            unordered,
             is_ordered.0,
             is_ordered.1,
             is_ordered.2,
-            is_time.as_nanos()
+            format_time(&is_time),
+            ks_ordered.0,
+            ks_ordered.3,
+            ks_ordered.1,
+            ks_ordered.2,
+            format_time(&ks_time),
+            qs_ordered.0,
+            qs_ordered.3,
+            qs_ordered.1,
+            qs_ordered.2,
+            format_time(&qs_time),
+            ms_ordered.0,
+            ms_ordered.1,
+            ms_ordered.2,
+            format_time(&ms_time),
+            hs_ordered.0,
+            hs_ordered.1,
+            hs_ordered.2,
+            format_time(&hs_time),
         )
         .as_str(),
     );
+}
+
+fn format_time(time: &Duration) -> String {
+    let nanos = time.as_nanos();
+    let millis = nanos / 1_000_000;
+    let seconds = millis / 1_000;
+    let minutes = seconds / 60;
+    let hours = minutes / 60;
+    if millis == 0 {
+        format!("{}ns", nanos)
+    } else if seconds == 0 {
+        format!("{}ms {}ns", millis, nanos - (millis * 1_000_000))
+    } else if minutes == 0 {
+        format!(
+            "{}s {}ms {}ns",
+            seconds,
+            millis - (seconds * 1_000),
+            nanos - (millis * 1_000_000)
+        )
+    } else if hours == 0 {
+        format!(
+            "{}m {}s {}ms {}ns",
+            minutes,
+            seconds - (minutes * 60),
+            millis - (seconds * 1_000),
+            nanos - (millis * 1_000_000)
+        )
+    } else {
+        format!(
+            "{}h {}m {}s {}ms {}ns",
+            hours,
+            minutes - (hours * 60),
+            seconds - (minutes * 60),
+            millis - (seconds * 1_000),
+            nanos - (millis * 1_000_000)
+        )
+    }
 }
 
 fn setup() -> Config {

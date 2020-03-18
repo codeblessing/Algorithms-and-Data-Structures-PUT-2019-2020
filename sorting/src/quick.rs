@@ -1,12 +1,24 @@
 static mut COMPARISONS: u32 = 0;
 static mut SWAPS: u32 = 0;
 
-pub fn sort(data: &Vec<i32>, comparator: impl Fn(&i32, &i32) -> i32) -> (Vec<i32>, u32, u32) {
+pub fn sort(
+    data: &Vec<i32>,
+    comparator: impl Fn(&i32, &i32) -> i32,
+) -> (Vec<i32>, u32, u32, Vec<i32>) {
     let mut sorted = data.clone();
+
+    let mut pivots: Vec<i32> = vec![];
+
     let len = sorted.len();
-    _quicksort_(&mut sorted, 0isize, (len - 1) as isize, &comparator);
+    _quicksort_(
+        &mut sorted,
+        0isize,
+        (len - 1) as isize,
+        &comparator,
+        &mut pivots,
+    );
     unsafe {
-        let out = (sorted, COMPARISONS, SWAPS);
+        let out = (sorted, COMPARISONS, SWAPS, pivots);
         COMPARISONS = 0;
         SWAPS = 0;
         return out;
@@ -15,7 +27,13 @@ pub fn sort(data: &Vec<i32>, comparator: impl Fn(&i32, &i32) -> i32) -> (Vec<i32
 
 // 3-way partitioning quicksort. Slightly improved Hoare's algorithm based on
 // https://www.cs.princeton.edu/~rs/talks/QuicksortIsOptimal.pdf
-fn _quicksort_(array: &mut [i32], left: isize, right: isize, compare: &impl Fn(&i32, &i32) -> i32) {
+fn _quicksort_(
+    array: &mut [i32],
+    left: isize,
+    right: isize,
+    compare: &impl Fn(&i32, &i32) -> i32,
+    pivots: &mut Vec<i32>,
+) {
     if right <= left {
         return;
     }
@@ -26,6 +44,7 @@ fn _quicksort_(array: &mut [i32], left: isize, right: isize, compare: &impl Fn(&
     let mut q: isize = j;
     unsafe {
         let v: *mut i32 = &mut array[right as usize];
+        pivots.push(*v);
         loop {
             i += 1;
             while {
@@ -80,6 +99,6 @@ fn _quicksort_(array: &mut [i32], left: isize, right: isize, compare: &impl Fn(&
             assert!(k != 0);
         }
     }
-    _quicksort_(array, left, j, compare);
-    _quicksort_(array, i, right, compare);
+    _quicksort_(array, left, j, compare, pivots);
+    _quicksort_(array, i, right, compare, pivots);
 }

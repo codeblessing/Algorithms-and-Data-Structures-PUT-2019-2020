@@ -4,43 +4,25 @@ pub fn sort(
     data: &Vec<i32>,
     knuth_index: &mut u32,
     comparator: impl Fn(&i32, &i32) -> i32,
-) -> (Vec<i32>, u32, u32) {
+) -> (Vec<i32>, u32, u32, Vec<u32>) {
     let mut knuth_delta: u32 = ((3i32.pow(*knuth_index) - 1) / 2) as u32;
     let mut sorted: Vec<i32> = vec![];
     let mut comparisons: u32 = 0;
     let mut swaps = 0u32;
+    let mut deltas: Vec<u32> = vec![];
 
     while knuth_delta > 0 {
         let (srtd, comps, swps) = shellsort(data, knuth_delta, &comparator);
         sorted = srtd;
         comparisons += comps;
         swaps += swps;
+        deltas.push(knuth_delta);
 
         *knuth_index -= 1;
         knuth_delta = ((3i32.pow(*knuth_index) - 1) / 2) as u32;
     }
 
-    return (sorted, comparisons, swaps);
-}
-
-pub fn classic_shellsort(
-    data: &Vec<i32>,
-    comparator: impl Fn(&i32, &i32) -> i32,
-) -> (Vec<i32>, u32, u32) {
-    let mut delta = (data.len() / 2) as u32;
-    let mut sorted: Vec<i32> = vec![];
-    let mut comparisons: u32 = 0;
-    let mut swaps = 0u32;
-
-    while delta > 0 {
-        let (srtd, comps, swps) = shellsort(&data, delta, &comparator);
-        sorted = srtd;
-        comparisons += comps;
-        swaps += swps;
-        delta = (delta / 2) as u32;
-    }
-
-    return (sorted, comparisons, swaps);
+    return (sorted, comparisons, swaps, deltas);
 }
 
 fn shellsort(

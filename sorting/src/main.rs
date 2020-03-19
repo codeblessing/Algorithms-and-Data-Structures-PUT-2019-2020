@@ -23,7 +23,7 @@ fn main() {
     let log = Log::new();
     log.open(Path::new(args.output.as_str()), args.append);
 
-    let mut unordered: Vec<i32> = Vec::with_capacity(args.size as usize);
+    let mut unordered: Vec<u32> = Vec::with_capacity(args.size as usize);
 
     if args.input != None && Path::new(args.input.clone().unwrap().as_str()).exists() {
         let mut content: String = String::new();
@@ -35,23 +35,25 @@ fn main() {
         unordered = content
             .split_ascii_whitespace()
             .map(|val| i32::from_str(val).unwrap_or(std::i32::MIN))
-            .filter(|&val| val != std::i32::MIN)
+            .filter(|&val| val > -1)
+            .map(|val| val as u32)
             .collect();
     } else if args.generate {
         for _ in 0..args.size {
-            unordered.push(rand::thread_rng().gen_range(-100000, 100000));
+            unordered.push(rand::thread_rng().gen_range(0, 100_000));
         }
     } else {
         let mut content = String::new();
         println!("Podaj liczby (oddzielone spacją) i naciśnij enter:");
-        stdin().read_to_string(&mut content).unwrap_or_else(|err| {
+        stdin().read_line(&mut content).unwrap_or_else(|err| {
             eprintln!("Input error: {}", err);
             0
         });
         unordered = content
             .split_ascii_whitespace()
             .map(|val| i32::from_str(val).unwrap_or(std::i32::MIN))
-            .filter(|&val| val != std::i32::MIN)
+            .filter(|&val| val > -1)
+            .map(|val| val as u32)
             .collect()
     }
 
@@ -59,22 +61,20 @@ fn main() {
         return;
     }
 
-    fn compare(first: &i32, second: &i32) -> i32 {
-        if *second as i64 > (std::i32::MIN + first) as i64 {
-            second - first
-        } else {
-            -1
-        }
+    fn compare(first: u32, second: u32) -> i32 {
+        second as i32 - first as i32
     };
+
+    fn merge_compare(first: i32, second: i32) -> i32 {
+        second - first
+    }
 
     let mut start_time = Instant::now();
     let is_ordered = insertion::sort(&unordered, &compare);
     let is_time = Instant::now().duration_since(start_time);
 
-    let mut knuth_index = ((((2 * unordered.len()) / 3) + 1) as f32).log(3f32) as u32;
-
     let ks_start_time = Instant::now();
-    let ks_ordered = shell::sort(&unordered, &mut knuth_index, &compare);
+    let ks_ordered = shell::sort(&unordered, &compare);
     let ks_time = Instant::now().duration_since(ks_start_time);
 
     start_time = Instant::now();
@@ -86,14 +86,13 @@ fn main() {
     let hs_time = Instant::now().duration_since(start_time);
 
     start_time = Instant::now();
-    let ms_ordered = merge::sort(&unordered, &compare);
+    let ms_ordered = merge::sort(&unordered, &merge_compare);
     let ms_time = Instant::now().duration_since(start_time);
 
     log.log(
         format!(
             r"[Unordered]
 {:?}
-
 
 [Insertion Sort]
 Ordered:
@@ -102,7 +101,6 @@ Ordered:
 Comparisons: {}
 Swaps: {}
 Time: {}
-
 
 [Shell Sort]
 Ordered:
@@ -113,7 +111,6 @@ Comparisons: {}
 Swaps: {}
 Time: {}
 
-
 [Quick Sort]
 Ordered:
 {:?}
@@ -123,7 +120,6 @@ Comparisons: {}
 Swaps: {}
 Time: {}
 
-
 [Merge Sort]
 Ordered:
 {:?}
@@ -131,7 +127,6 @@ Ordered:
 Comparisons: {}
 Swaps: {}
 Time: {}
-
 
 [Heap Sort]
 Ordered:
@@ -209,7 +204,7 @@ fn format_time(time: &Duration) -> String {
 
 fn setup() -> Config {
     let args = App::new("Sorting")
-        .version("2020.03.13")
+        .version("2020.03.18")
         .author("Jakub Kwiatkowski <jakub.j.kwiatkowski@student.put.poznan.pl>")
         .arg(
             Arg::with_name("input")

@@ -208,8 +208,7 @@ namespace bst
 
 	Tree::~Tree()
 	{
-		delete this->root_;
-		this->root_ = nullptr;
+		remove_all();
 	}
 
 	Tree::Node::Node(const int value)

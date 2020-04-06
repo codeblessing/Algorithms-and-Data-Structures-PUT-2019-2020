@@ -9,12 +9,14 @@ namespace avl
 		class Node;
 	public:
 		Tree();
-		explicit Tree(std::vector<int> values);
+		explicit Tree(const std::vector<int>& values);
 		~Tree();
 		auto min(Node* node = nullptr) const->Node*;
 		auto max(Node* node = nullptr) const->Node*;
 		void insert(int value);
 		void remove(int key);
+		void update_height(Node* parent);
+		void balance_tree(Node* node);
 		void remove_all(Node* node = nullptr);
 		void inorder(Node* node = nullptr) const;
 		void preorder(Node* node = nullptr) const;
@@ -50,8 +52,8 @@ namespace avl
 		void insert(Node* node, int value);
 		void rr_rotation(Node* node);
 		void ll_rotation(Node* node);
-		void rl_rotation(Node* node);
-		void lr_rotation(Node* node);
+		void rl_rotation(Node* rnode);
+		void lr_rotation(Node* lnode);
 		Node* _root;
 	};
 } // namespace avl

@@ -3,8 +3,6 @@
 #include <algorithm>
 #include <vector>
 
-#define forever while(true)
-
 namespace avl
 {
 	Tree::Tree()
@@ -12,17 +10,12 @@ namespace avl
 		this->_root = nullptr;
 	}
 
-	Tree::Tree(std::vector<int> values)
+	Tree::Tree(const std::vector<int>& values)
 	{
 		this->_root = nullptr;
-		std::sort(values.begin(), values.end());
-		for (auto i = values.begin() + (values.size() / 2); i != values.end(); ++i)
+		for(auto key : values)
 		{
-			this->insert(*i);
-		}
-		for (auto i = values.begin(); i != (values.begin() + (values.size() / 2)); ++i)
-		{
-			this->insert(*i);
+			insert(key);
 		}
 	}
 
@@ -69,7 +62,7 @@ namespace avl
 
 	void Tree::insert(const int value)
 	{
-		if(!this->_root)
+		if (!this->_root)
 			this->_root = new Node(value);
 		else
 		{
@@ -123,86 +116,160 @@ namespace avl
 		remove(removed);
 	}
 
+	// ReSharper disable once CppMemberFunctionMayBeConst
+	void Tree::update_height(Node* parent)
+	{
+		auto left_height = 0, right_height = 0;
+		while (parent)
+		{
+			left_height = parent->get_left() ? parent->get_left()->get_height() : 0;
+			right_height = parent->get_right() ? parent->get_right()->get_height() : 0;
+			parent->set_height(1 + std::max(left_height, right_height));
+			parent = parent->get_parent();
+		}
+	}
+
+	void Tree::balance_tree(Node* node)
+	{
+		while(node)
+		{
+			if(node->get_balance_factor() > 1)
+			{
+				node->get_left()->get_balance_factor() > 0 ? ll_rotation(node) : lr_rotation(node);
+			}
+			else if(node->get_balance_factor() < -1)
+			{
+				node->get_right()->get_balance_factor() < 0 ? rr_rotation(node) : rl_rotation(node);
+			}
+			node = node->get_parent();
+		}
+	}
+
 	void Tree::remove(Node* node)
 	{
 		auto parent = node->get_parent();
 		if (node->get_left() == nullptr)
 		{
 			transplant(node, node->get_right());
-			while (parent)
-			{
-				parent->set_height(1 + std::max(parent->get_left()->get_height(), parent->get_right()->get_height()));
-				parent = parent->get_parent();
-			}
+			update_height(node->get_right());
+			balance_tree(parent);
 		}
 		else if (node->get_right() == nullptr)
 		{
 			transplant(node, node->get_left());
-			while (parent)
-			{
-				parent->set_height(1 + std::max(parent->get_left()->get_height(), parent->get_right()->get_height()));
-				parent = parent->get_parent();
-			}
+			update_height(parent);
+			balance_tree(parent);
 		}
 		else
 		{
-			auto new_node = min(node);
-			if (new_node->get_parent() != node)
-			{
-				transplant(new_node, new_node->get_right());
-				new_node->set_right(node->get_right());
-				new_node->get_right()->set_parent(new_node);
-			}
+			auto new_node = node->get_left();
+			auto first_greater = max(new_node);
+			if (node->get_parent()->get_left() == node)
+				node->get_parent()->set_left(new_node);
+			else
+				node->get_parent()->set_right(new_node);
+			new_node->set_parent(node->get_parent());
+			first_greater->set_right(node->get_right());
+			node->get_right()->set_parent(first_greater);
+
 			transplant(node, new_node);
-			new_node->set_left(node->get_left());
-			new_node->get_left()->set_parent(new_node);
+
+			parent = max(new_node);
+			update_height(parent);
+			balance_tree(parent);
 		}
 		delete node;
 		node = nullptr;
 	}
 
+	// ReSharper disable once CppMemberFunctionMayBeConst
 	void Tree::rr_rotation(Node* node)
 	{
-		auto right_son = node->get_right();
-		auto successor = right_son->get_left();
+		auto new_parent = node->get_right();
+		auto np_left_son = new_parent->get_left();
 
-		right_son->set_left(node);
-		right_son->set_parent(node->get_parent());
-		node->set_parent(right_son);
-		node->set_right(successor);
-		if(successor)
-			successor->set_parent(node);
+		new_parent->set_left(node);
+		new_parent->set_parent(node->get_parent());
+		node->get_parent()->get_right() == node ? node->get_parent()->set_right(new_parent) : node->get_parent()->set_left(new_parent);
+		node->set_parent(new_parent);
+		node->set_right(np_left_son);
+		if (np_left_son)
+			np_left_son->set_parent(node);
 
-		node->set_height(1 + std::max(node->get_left()->get_height(), node->get_right()->get_height()));
-		right_son->set_height(1 + std::max(right_son->get_left()->get_height(), right_son->get_right()->get_height()));
+		update_height(node);
 	}
 
+	// ReSharper disable once CppMemberFunctionMayBeConst
 	void Tree::ll_rotation(Node* node)
 	{
-		auto left_son = node->get_left();
-		auto successor = left_son->get_right();
-
-		left_son->set_right(node);
-		left_son->set_parent(node->get_parent());
-		node->set_parent(left_son);
-		node->set_left(successor);
-		if(successor)
-			successor->set_parent(node);
+		auto new_parent = node->get_left();
+		auto np_right_son = new_parent->get_right();
 		
-		node->set_height(1 + std::max(node->get_left()->get_height(), node->get_right()->get_height()));
-		left_son->set_height(1 + std::max(left_son->get_right()->get_height(), left_son->get_left()->get_height()));
+		new_parent->set_right(node);
+		new_parent->set_parent(node->get_parent());
+		node->get_parent()->get_left() == node ? node->get_parent()->set_left(new_parent) : node->get_parent()->set_right(new_parent);
+		node->set_parent(new_parent);
+		node->set_left(np_right_son);
+		if (np_right_son)
+			np_right_son->set_parent(node);
+
+		update_height(node);
 	}
 
 	void Tree::rl_rotation(Node* node)
 	{
-		ll_rotation(node);
-		rr_rotation(node);
+		auto rnode = node->get_right();
+		auto new_parent = rnode->get_left();
+		const auto np_right_son = new_parent->get_right();
+		
+		new_parent->set_right(rnode);
+		new_parent->set_parent(rnode->get_parent());
+		rnode->get_parent()->get_left() == rnode ? rnode->get_parent()->set_left(new_parent) : rnode->get_parent()->set_right(new_parent);
+		rnode->set_parent(new_parent);
+		rnode->set_left(np_right_son);
+		if (np_right_son)
+			np_right_son->set_parent(rnode);
+
+		new_parent = node->get_right();
+		auto np_left_son = new_parent->get_left();
+
+		new_parent->set_left(node);
+		new_parent->set_parent(node->get_parent());
+		node->get_parent()->get_right() == node ? node->get_parent()->set_right(new_parent) : node->get_parent()->set_left(new_parent);
+		node->set_parent(new_parent);
+		node->set_right(np_left_son);
+		if (np_left_son)
+			np_left_son->set_parent(node);
+
+		update_height(node);
 	}
 
 	void Tree::lr_rotation(Node* node)
 	{
-		rr_rotation(node);
-		ll_rotation(node);
+		auto lnode = node->get_left();
+		auto new_parent = lnode->get_right();
+		auto np_left_son = new_parent->get_left();
+
+		new_parent->set_left(lnode);
+		new_parent->set_parent(lnode->get_parent());
+		lnode->get_parent()->get_right() == lnode ? lnode->get_parent()->set_right(new_parent) : lnode->get_parent()->set_left(new_parent);
+		lnode->set_parent(new_parent);
+		lnode->set_right(np_left_son);
+		if (np_left_son)
+			np_left_son->set_parent(lnode);
+
+		new_parent = node->get_left();
+		auto np_right_son = new_parent->get_right();
+		
+		new_parent->set_right(node);
+		new_parent->set_parent(node->get_parent());
+		node->get_parent()->get_left() == node ? node->get_parent()->set_left(new_parent) : node->get_parent()->set_right(new_parent);
+		node->set_parent(new_parent);
+		node->set_left(np_right_son);
+		if (np_right_son)
+			np_right_son->set_parent(node);
+
+		update_height(node);
 	}
 
 	void Tree::remove_all(Node* node)
@@ -242,9 +309,9 @@ namespace avl
 
 	void Tree::insert(Node* node, const int value)
 	{
-		if(node->get_value() > value)
+		if (node->get_value() > value)
 		{
-			if(node->get_left())
+			if (node->get_left())
 				insert(node->get_left(), value);
 			else
 			{
@@ -255,7 +322,7 @@ namespace avl
 		}
 		else
 		{
-			if(node->get_right())
+			if (node->get_right())
 				insert(node->get_right(), value);
 			else
 			{
@@ -265,13 +332,13 @@ namespace avl
 			}
 		}
 
-		node->set_height(1 + std::max(node->get_right()->get_height(), node->get_left()->get_height()));
+		update_height(node);
 		
-		if(node->get_balance_factor() > 1)
+		if (node->get_balance_factor() > 1)
 		{
 			node->get_left()->get_value() > value ? ll_rotation(node) : lr_rotation(node);
 		}
-		else if(node->get_balance_factor() < -1)
+		else if (node->get_balance_factor() < -1)
 		{
 			node->get_right()->get_value() < value ? rr_rotation(node) : rl_rotation(node);
 		}
@@ -294,7 +361,7 @@ namespace avl
 
 	auto Tree::Node::get_balance_factor() const -> int
 	{
-		return static_cast<int>(this->get_left()->get_height() - this->get_right()->get_height());
+		return (this->get_left() ? this->get_left()->get_height() : 0) - (this->get_right() ? this->get_right()->get_height() : 0);
 	}
 
 	int Tree::Node::get_value() const
@@ -321,11 +388,6 @@ namespace avl
 	{
 		return this->_height;
 	}
-
-	/*void Tree::Node::set_balance_factor(const int value)
-	{
-		this->balance_factor_ = value;
-	}*/
 
 	void Tree::Node::set_value(const int value)
 	{

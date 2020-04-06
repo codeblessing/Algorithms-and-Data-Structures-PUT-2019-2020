@@ -13,7 +13,7 @@ namespace avl
 	Tree::Tree(const std::vector<int>& values)
 	{
 		this->_root = nullptr;
-		for(auto key : values)
+		for (auto key : values)
 		{
 			insert(key);
 		}
@@ -38,7 +38,7 @@ namespace avl
 		if (node == nullptr)
 			node = this->_root;
 
-		while (node->get_left() != nullptr)
+		while (node->get_left())
 		{
 			std::cout << node->get_value() << ' ';
 			node = node->get_left();
@@ -113,6 +113,7 @@ namespace avl
 	void Tree::remove(const int key)
 	{
 		const auto removed = find(key);
+		std::cout << "removed key: " << removed->get_value() << ", it's parent: " << removed->get_parent()->get_value() << std::endl;
 		remove(removed);
 	}
 
@@ -122,61 +123,82 @@ namespace avl
 		auto left_height = 0, right_height = 0;
 		while (parent)
 		{
+			if (parent == nullptr)
+				std::cerr << "Null parent" << std::endl;
 			left_height = parent->get_left() ? parent->get_left()->get_height() : 0;
 			right_height = parent->get_right() ? parent->get_right()->get_height() : 0;
 			parent->set_height(1 + std::max(left_height, right_height));
+			std::cerr << "Updating tree height." << std::endl;
+			std::cerr << "Parent value: " << parent->get_value() << std::endl;
 			parent = parent->get_parent();
 		}
+		std::cerr << "Tree height updated." << std::endl;
 	}
 
 	void Tree::balance_tree(Node* node)
 	{
-		while(node)
+		while (node)
 		{
-			if(node->get_balance_factor() > 1)
+			if (node->get_balance_factor() > 1)
 			{
 				node->get_left()->get_balance_factor() > 0 ? ll_rotation(node) : lr_rotation(node);
 			}
-			else if(node->get_balance_factor() < -1)
+			else if (node->get_balance_factor() < -1)
 			{
 				node->get_right()->get_balance_factor() < 0 ? rr_rotation(node) : rl_rotation(node);
 			}
+			std::cerr << "Balancing tree." << std::endl;
+			std::cerr << "Node value: " << node->get_value() << std::endl;
 			node = node->get_parent();
 		}
+		std::cerr << "Tree balanced." << std::endl;
 	}
 
 	void Tree::remove(Node* node)
 	{
-		auto parent = node->get_parent();
-		if (node->get_left() == nullptr)
+		const auto parent = node->get_parent();
+		if (!node->get_left())
 		{
+			std::cout << "Removing node without left son" << std::endl;
 			transplant(node, node->get_right());
 			update_height(node->get_right());
 			balance_tree(parent);
 		}
-		else if (node->get_right() == nullptr)
+		else if (!node->get_right())
 		{
+			std::cout << "Removing node without right son" << std::endl;
 			transplant(node, node->get_left());
 			update_height(parent);
 			balance_tree(parent);
 		}
 		else
 		{
-			auto new_node = node->get_left();
-			auto first_greater = max(new_node);
-			if (node->get_parent()->get_left() == node)
-				node->get_parent()->set_left(new_node);
-			else
-				node->get_parent()->set_right(new_node);
-			new_node->set_parent(node->get_parent());
-			first_greater->set_right(node->get_right());
-			node->get_right()->set_parent(first_greater);
+			auto new_parent = min(node->get_right());
+			const auto np_right_son = new_parent->get_right();
+			new_parent->get_parent()->set_left(np_right_son);
+			new_parent->set_parent(node->get_parent());
+			new_parent->set_left(node->get_left());
+			if (new_parent != node->get_right())
+			{
+				new_parent->set_right(node->get_right());
+				if (new_parent->get_right())
+					new_parent->get_right()->set_parent(new_parent);
+			}
+			if (new_parent->get_parent())
+			{
+				if (new_parent->get_parent()->get_left() == node)
+					new_parent->get_parent()->set_left(new_parent);
+				else
+					new_parent->get_parent()->set_right(new_parent);
+			}
+			if (new_parent->get_left())
+				new_parent->get_left()->set_parent(new_parent);
 
-			transplant(node, new_node);
-
-			parent = max(new_node);
-			update_height(parent);
-			balance_tree(parent);
+			const auto changed = min(node->get_right());
+			std::cerr << "Before updating the height." << std::endl;
+			update_height(changed);
+			std::cerr << "Before balancing the tree." << std::endl;
+			balance_tree(changed);
 		}
 		delete node;
 		node = nullptr;
@@ -190,7 +212,10 @@ namespace avl
 
 		new_parent->set_left(node);
 		new_parent->set_parent(node->get_parent());
-		node->get_parent()->get_right() == node ? node->get_parent()->set_right(new_parent) : node->get_parent()->set_left(new_parent);
+		if(node->get_parent())
+			node->get_parent()->get_right() == node ? node->get_parent()->set_right(new_parent) : node->get_parent()->set_left(new_parent);
+		else
+			this->_root = new_parent;
 		node->set_parent(new_parent);
 		node->set_right(np_left_son);
 		if (np_left_son)
@@ -204,7 +229,7 @@ namespace avl
 	{
 		auto new_parent = node->get_left();
 		auto np_right_son = new_parent->get_right();
-		
+
 		new_parent->set_right(node);
 		new_parent->set_parent(node->get_parent());
 		node->get_parent()->get_left() == node ? node->get_parent()->set_left(new_parent) : node->get_parent()->set_right(new_parent);
@@ -221,7 +246,7 @@ namespace avl
 		auto rnode = node->get_right();
 		auto new_parent = rnode->get_left();
 		const auto np_right_son = new_parent->get_right();
-		
+
 		new_parent->set_right(rnode);
 		new_parent->set_parent(rnode->get_parent());
 		rnode->get_parent()->get_left() == rnode ? rnode->get_parent()->set_left(new_parent) : rnode->get_parent()->set_right(new_parent);
@@ -260,7 +285,7 @@ namespace avl
 
 		new_parent = node->get_left();
 		auto np_right_son = new_parent->get_right();
-		
+
 		new_parent->set_right(node);
 		new_parent->set_parent(node->get_parent());
 		node->get_parent()->get_left() == node ? node->get_parent()->set_left(new_parent) : node->get_parent()->set_right(new_parent);
@@ -333,7 +358,7 @@ namespace avl
 		}
 
 		update_height(node);
-		
+
 		if (node->get_balance_factor() > 1)
 		{
 			node->get_left()->get_value() > value ? ll_rotation(node) : lr_rotation(node);

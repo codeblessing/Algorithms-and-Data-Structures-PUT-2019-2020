@@ -22,6 +22,15 @@ namespace avl
 		void preorder(Node* node = nullptr) const;
 		void subtree_pre_walk(int key) const;
 	private:
+		auto find(int key) const->Node*;
+		void transplant(Node* old_node, Node* new_node);
+		void remove(Node* node);
+		void insert(Node* node, int value);
+		void rr_rotation(Node* node);
+		void ll_rotation(Node* node);
+		void rl_rotation(Node* node);
+		void lr_rotation(Node* node);
+		Node* _root;
 		class Node
 		{
 		public:
@@ -32,7 +41,6 @@ namespace avl
 			auto get_right() const->Node*;
 			auto get_left() const->Node*;
 			auto get_height() const -> int;
-			//void set_balance_factor(int value);
 			void set_value(int value);
 			void set_parent(Node* node);
 			void set_right(Node* node);
@@ -46,15 +54,6 @@ namespace avl
 			Node* _right;
 			Node* _left;
 		};
-		auto find(int key) const->Node*;
-		void transplant(Node* old_node, Node* new_node);
-		void remove(Node* node);
-		void insert(Node* node, int value);
-		void rr_rotation(Node* node);
-		void ll_rotation(Node* node);
-		void rl_rotation(Node* rnode);
-		void lr_rotation(Node* lnode);
-		Node* _root;
 	};
 } // namespace avl
 #endif //_ADELSON_VELSKY_LANDIS_TREE_HPP_

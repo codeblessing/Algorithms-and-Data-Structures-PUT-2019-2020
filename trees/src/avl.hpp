@@ -1,5 +1,6 @@
 #ifndef _ADELSON_VELSKY_LANDIS_TREE_HPP_
 #define _ADELSON_VELSKY_LANDIS_TREE_HPP_
+#define forever while(true)
 #include <vector>
 
 namespace avl

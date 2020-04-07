@@ -59,15 +59,17 @@ namespace bst
 
 	void Tree::inorder(Node* node) const
 	{
-		if(node == nullptr)
+		if(!node)
 			node = this->root_;
+		if(!node)
+			return;
 
-		if (node->get_left() != nullptr)
+		if (node->get_left())
 			inorder(node->get_left());
 		
 		std::cout << node->get_value() << ' ';
 
-		if (node->get_right() != nullptr)
+		if (node->get_right())
 			inorder(node->get_right());
 
 		if(node == this->root_)
@@ -76,15 +78,17 @@ namespace bst
 
 	void Tree::preorder(Node* node) const
 	{
-		if(node == nullptr)
+		if(!node)
 			node = this->root_;
+		if(!node)
+			return;
 		
 		std::cout << node->get_value() << ' ';
 
-		if (node->get_left() != nullptr)
+		if (node->get_left())
 			preorder(node->get_left());
 
-		if (node->get_right() != nullptr)
+		if (node->get_right())
 			preorder(node->get_right());
 
 		if(node == this->root_)
@@ -93,8 +97,10 @@ namespace bst
 
 	Tree::Node* Tree::max(Node* node) const
 	{
-		if(node == nullptr)
+		if(!node)
 			node = this->root_;
+		if(!node)
+			return nullptr;
 		
 		while (node->get_right() != nullptr)
 		{
@@ -107,8 +113,10 @@ namespace bst
 
 	Tree::Node* Tree::min(Node* node) const
 	{
-		if(node == nullptr)
+		if(!node)
 			node = this->root_;
+		if(!node)
+			return nullptr;
 		
 		while (node->get_left() != nullptr)
 		{
@@ -122,6 +130,8 @@ namespace bst
 	void Tree::subtree_pre_walk(const int key) const
 	{
 		const auto node = find(key);
+		if(!node)
+			return;
 		preorder(node);
 	}
 
@@ -133,6 +143,9 @@ namespace bst
 
 	void Tree::remove(Node* node)
 	{
+		if(!node)
+			return;
+		
 		if (node->get_left() == nullptr)
 		{
 			transplant(node, node->get_right());
@@ -160,8 +173,10 @@ namespace bst
 
 	void Tree::remove_all(Node* node)
 	{
-		if (node == nullptr)
+		if (!node)
 			node = this->root_;
+		if(!node)
+			return;
 		
 		if (node->get_left() != nullptr)
 			remove_all(node->get_left());
@@ -175,7 +190,7 @@ namespace bst
 	Tree::Node* Tree::find(const int key) const
 	{
 		auto node = this->root_;
-		while (node != nullptr)
+		while (node)
 		{
 			if (node->get_value() == key)
 				return node;
@@ -187,6 +202,9 @@ namespace bst
 
 	void Tree::transplant(Node* old_node, Node* new_node)
 	{
+		if(!old_node)
+			return;
+		
 		if (old_node->get_parent() == nullptr)
 		{
 			this->root_ = new_node;
@@ -200,7 +218,7 @@ namespace bst
 			old_node->get_parent()->set_right(new_node);
 		}
 
-		if (new_node != nullptr)
+		if (new_node)
 		{
 			new_node->set_parent(old_node->get_parent());
 		}

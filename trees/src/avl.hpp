@@ -24,6 +24,7 @@ namespace avl
 		void subtree_pre_walk(int key) const;
 	private:
 		auto find(int key) const->Node*;
+		void remove_unbalanced(Node* node);
 		void transplant(Node* old_node, Node* new_node);
 		void remove(Node* node);
 		void insert(Node* node, int value);

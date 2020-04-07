@@ -133,6 +133,7 @@ namespace bst
 		if(!node)
 			return;
 		preorder(node);
+		std::cout << std::endl;
 	}
 
 	void Tree::remove(const int key)

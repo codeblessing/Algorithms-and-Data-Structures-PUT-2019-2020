@@ -13,6 +13,7 @@ namespace avl
 	Tree::Tree(const std::vector<int>& values)
 	{
 		this->_root = nullptr;
+		
 		for (auto key : values)
 		{
 			insert(key);
@@ -21,17 +22,17 @@ namespace avl
 
 	Tree::Node* Tree::max(Node* node) const
 	{
-		if (node == nullptr)
+		if (!node)
 			node = this->_root;
+		
 		if (!node)
 			return nullptr;
 
-		while (node->get_right() != nullptr)
+		while (node->get_right())
 		{
-			std::cout << node->get_value() << ' ';
 			node = node->get_right();
 		}
-		std::cout << node->get_value() << std::endl;
+		
 		return node;
 	}
 
@@ -39,21 +40,22 @@ namespace avl
 	{
 		if (!node)
 			node = this->_root;
+		
 		if (!node)
 			return nullptr;
 
 		while (node->get_left())
 		{
-			std::cout << node->get_value() << ' ';
 			node = node->get_left();
 		}
-		std::cout << node->get_value() << std::endl;
+		
 		return node;
 	}
 
 	Tree::Node* Tree::find(const int key) const
 	{
 		auto node = this->_root;
+		
 		while (node)
 		{
 			if (node->get_value() == key)
@@ -61,9 +63,73 @@ namespace avl
 
 			node = (node->get_value() > key) ? node->get_left() : node->get_right();
 		}
+		
 		return node;
 	}
 
+	void Tree::insert(const int value)
+	{
+		if (!this->_root)
+			this->_root = new Node(value);
+		else
+		{
+			insert(this->_root, value);
+		}
+	}
+
+	void Tree::inorder(Node* node) const
+	{
+		if (!node)
+			node = this->_root;
+		
+		if (!node)
+			return;
+
+		if (node->get_left())
+			inorder(node->get_left());
+
+		std::cout << node->get_value() << ' ';
+
+		if (node->get_right())
+			inorder(node->get_right());
+	}
+
+	void Tree::preorder(Node* node) const
+	{
+		if (!node)
+			node = this->_root;
+		
+		if (!node)
+			return;
+
+		std::cout << node->get_value() << ' ';
+
+		if (node->get_left())
+			preorder(node->get_left());
+
+		if (node->get_right())
+			preorder(node->get_right());
+	}
+
+	void Tree::subtree_pre_walk(const int key) const
+	{
+		const auto node = find(key);
+		
+		if (!node)
+			return;
+		
+		preorder(node);
+		
+		std::cout << std::endl;
+	}
+
+	void Tree::remove(const int key)
+	{
+		const auto removed = find(key);
+		//std::cout << "removed key: " << removed->get_value() << ", it's parent: " << removed->get_parent()->get_value() << std::endl;
+		remove(removed);
+	}
+	
 	void Tree::remove_unbalanced(Node* node)
 	{
 		if(!node)
@@ -92,70 +158,6 @@ namespace avl
 		}
 		delete node;
 		node = nullptr;
-	}
-
-	void Tree::insert(const int value)
-	{
-		if (!this->_root)
-			this->_root = new Node(value);
-		else
-		{
-			insert(this->_root, value);
-		}
-	}
-
-	void Tree::inorder(Node* node) const
-	{
-		if (!node)
-			node = this->_root;
-		if (!node)
-			return;
-
-		if (node->get_left())
-			inorder(node->get_left());
-
-		std::cout << node->get_value() << ' ';
-
-		if (node->get_right())
-			inorder(node->get_right());
-
-		if (node == this->_root)
-			std::cout << std::endl;
-	}
-
-	void Tree::preorder(Node* node) const
-	{
-		if (!node)
-			node = this->_root;
-		if (!node)
-			return;
-
-		std::cout << node->get_value() << ' ';
-
-		if (node->get_left())
-			preorder(node->get_left());
-
-		if (node->get_right())
-			preorder(node->get_right());
-
-		if (node == this->_root)
-			std::cout << std::endl;
-	}
-
-	void Tree::subtree_pre_walk(const int key) const
-	{
-		const auto node = find(key);
-		if (!node)
-			return;
-		preorder(node);
-		std::cout << std::endl;
-	}
-
-	void Tree::remove(const int key)
-	{
-		const auto removed = find(key);
-		//std::cout << "removed key: " << removed->get_value() << ", it's parent: " << removed->get_parent()->get_value() << std::endl;
-		remove(removed);
 	}
 
 	// ReSharper disable once CppMemberFunctionMayBeConst
@@ -252,7 +254,7 @@ namespace avl
 	// ReSharper disable once CppMemberFunctionMayBeConst
 	void Tree::rr_rotation(Node* node)
 	{
-		if (!node)
+		if (!node || !node->get_right())
 			return;
 
 		auto new_parent = node->get_right();
@@ -260,12 +262,15 @@ namespace avl
 
 		new_parent->set_left(node);
 		new_parent->set_parent(node->get_parent());
+		
 		if (node->get_parent())
 			node->get_parent()->get_right() == node ? node->get_parent()->set_right(new_parent) : node->get_parent()->set_left(new_parent);
 		else
 			this->_root = new_parent;
+		
 		node->set_parent(new_parent);
 		node->set_right(np_left_son);
+		
 		if (np_left_son)
 			np_left_son->set_parent(node);
 
@@ -275,7 +280,7 @@ namespace avl
 	// ReSharper disable once CppMemberFunctionMayBeConst
 	void Tree::ll_rotation(Node* node)
 	{
-		if (!node)
+		if (!node || !node->get_left())
 			return;
 
 		auto new_parent = node->get_left();
@@ -283,12 +288,15 @@ namespace avl
 
 		new_parent->set_right(node);
 		new_parent->set_parent(node->get_parent());
+		
 		if (node->get_parent())
 			node->get_parent()->get_left() == node ? node->get_parent()->set_left(new_parent) : node->get_parent()->set_right(new_parent);
 		else
 			this->_root = new_parent;
+		
 		node->set_parent(new_parent);
 		node->set_left(np_right_son);
+		
 		if (np_right_son)
 			np_right_son->set_parent(node);
 
@@ -297,71 +305,109 @@ namespace avl
 
 	void Tree::rl_rotation(Node* node)
 	{
-		if (!node)
+		if (!node || node->get_right())
 			return;
 
+		// ll_rotation
+		
 		auto rnode = node->get_right();
+
+		if (!rnode || !rnode->get_left())
+			return;
+
 		auto new_parent = rnode->get_left();
-		const auto np_right_son = new_parent->get_right();
+		auto np_right_son = new_parent->get_right();
 
 		new_parent->set_right(rnode);
 		new_parent->set_parent(rnode->get_parent());
-		rnode->get_parent()->get_left() == rnode ? rnode->get_parent()->set_left(new_parent) : rnode->get_parent()->set_right(new_parent);
+		
+		if (rnode->get_parent())
+			rnode->get_parent()->get_left() == rnode ? rnode->get_parent()->set_left(new_parent) : rnode->get_parent()->set_right(new_parent);
+		else
+			this->_root = new_parent;
+		
 		rnode->set_parent(new_parent);
 		rnode->set_left(np_right_son);
+		
 		if (np_right_son)
 			np_right_son->set_parent(rnode);
+
+		// rr_rotation
+
+		if (!node || !node->get_right())
+			return;
 
 		new_parent = node->get_right();
 		auto np_left_son = new_parent->get_left();
 
 		new_parent->set_left(node);
 		new_parent->set_parent(node->get_parent());
+		
 		if (node->get_parent())
 			node->get_parent()->get_right() == node ? node->get_parent()->set_right(new_parent) : node->get_parent()->set_left(new_parent);
 		else
 			this->_root = new_parent;
+		
 		node->set_parent(new_parent);
 		node->set_right(np_left_son);
+		
 		if (np_left_son)
 			np_left_son->set_parent(node);
-
+		
 		update_height(node);
 	}
 
 	void Tree::lr_rotation(Node* node)
 	{
-		if (!node)
+		if (!node || !node->get_left())
 			return;
 
+		// rr_rotation
+		
 		auto lnode = node->get_left();
+		if (!lnode || !lnode->get_right())
+			return;
+
 		auto new_parent = lnode->get_right();
 		auto np_left_son = new_parent->get_left();
 
 		new_parent->set_left(lnode);
 		new_parent->set_parent(lnode->get_parent());
-		lnode->get_parent()->get_right() == lnode ? lnode->get_parent()->set_right(new_parent) : lnode->get_parent()->set_left(new_parent);
+		
+		if (lnode->get_parent())
+			lnode->get_parent()->get_right() == lnode ? lnode->get_parent()->set_right(new_parent) : lnode->get_parent()->set_left(new_parent);
+		else
+			this->_root = new_parent;
+		
 		lnode->set_parent(new_parent);
 		lnode->set_right(np_left_son);
+		
 		if (np_left_son)
 			np_left_son->set_parent(lnode);
+
+		// ll_rotation
+
+		if (!node || !node->get_left())
+			return;
 
 		new_parent = node->get_left();
 		auto np_right_son = new_parent->get_right();
 
 		new_parent->set_right(node);
 		new_parent->set_parent(node->get_parent());
+		
 		if (node->get_parent())
 			node->get_parent()->get_left() == node ? node->get_parent()->set_left(new_parent) : node->get_parent()->set_right(new_parent);
 		else
 			this->_root = new_parent;
+		
 		node->set_parent(new_parent);
 		node->set_left(np_right_son);
+		
 		if (np_right_son)
 			np_right_son->set_parent(node);
 
-		update_height(node);
-	}
+		update_height(node);	}
 
 	void Tree::remove_all(Node* node)
 	{

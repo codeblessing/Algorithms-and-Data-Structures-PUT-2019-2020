@@ -12,8 +12,8 @@ namespace avl
 		Tree();
 		explicit Tree(const std::vector<int>& values);
 		~Tree();
-		auto min(Node* node = nullptr) const->Node*;
-		auto max(Node* node = nullptr) const->Node*;
+		auto min(Node* node = nullptr) const -> Node*;
+		auto max(Node* node = nullptr) const -> Node*;
 		void insert(int value);
 		void remove(int key);
 		void update_height(Node* parent);
@@ -23,7 +23,7 @@ namespace avl
 		void preorder(Node* node = nullptr) const;
 		void subtree_pre_walk(int key) const;
 	private:
-		auto find(int key) const->Node*;
+		auto find(int key) const -> Node*;
 		void remove_unbalanced(Node* node);
 		void transplant(Node* old_node, Node* new_node);
 		void remove(Node* node);

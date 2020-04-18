@@ -120,10 +120,10 @@ namespace bst
 		
 		while (node->get_left() != nullptr)
 		{
-			std::cout << node->get_value() << ' ';
+			//std::cout << node->get_value() << ' ';
 			node = node->get_left();
 		}
-		std::cout << node->get_value() << std::endl;
+		//std::cout << node->get_value() << std::endl;
 		return node;
 	}
 

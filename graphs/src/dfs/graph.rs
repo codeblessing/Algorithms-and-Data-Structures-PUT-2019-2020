@@ -1,5 +1,4 @@
 //! Topological sorting using DFS (Depth First Search) techniqe and graph matrix graph representation.
-//  TODO find out how to use graph matrix.
 use crate::graph;
 use linked_hash_set::LinkedHashSet;
 

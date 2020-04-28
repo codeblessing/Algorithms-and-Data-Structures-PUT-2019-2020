@@ -1,4 +1,5 @@
 //! Topological sorting using DFS (Depth First Search) techniqe and graph matrix graph representation.
+#![allow(dead_code)]
 use crate::graph;
 use linked_hash_set::LinkedHashSet;
 
@@ -67,7 +68,7 @@ pub fn sort(matrix: &graph::Matrix) -> Vec<usize> {
         }
         // If vertex have successor on stack there's a cycle and we can't sort this graph.
         else if !stack.insert_if_absent(successor) {
-            eprintln!("Cannot sort graph with cycles.");
+            println!("Cannot sort graph with cycles.");
             sorted = vec![];
             break;
         } else {

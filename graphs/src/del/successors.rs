@@ -31,7 +31,7 @@ pub fn sort(list: &successors::List) -> Vec<usize> {
         match predecessors.iter().find(|(_, preds)| preds.is_empty()) {
             Some((&key, _)) => vertex = key,
             None => {
-                eprintln!("Cannot sort graph with cycles.");
+                println!("Cannot sort graph with cycles.");
                 sorted = vec![];
                 break;
             }

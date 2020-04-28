@@ -27,7 +27,7 @@ pub fn sort(matrix: &adjacency::Matrix) -> Vec<usize> {
     loop {
         match predecessors.iter().find(|(_, preds)| preds.is_empty()) {
             None => {
-                eprintln!("Cannot sort graph with cycles.");
+                println!("Cannot sort graph with cycles.");
                 sorted = vec![];
                 break;
             }

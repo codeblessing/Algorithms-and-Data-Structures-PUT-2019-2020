@@ -34,7 +34,7 @@ pub fn sort(list: &successors::List) -> Vec<usize> {
         print_colored(&list);
         // If vertex have grey succesor there's cycle and we can't sort this graph.
         if let Some(_) = list[&vertex].iter().find(|val| val.color == Color::Grey) {
-            eprintln!("Cannot sort graph with cycles.");
+            println!("Cannot sort graph with cycles.");
             sorted = vec![];
             break;
         }
@@ -97,7 +97,7 @@ fn to_colored_vertex(list: &successors::List) -> HashMap<usize, Vec<ColoredVerte
 
 fn print_colored(list: &HashMap<usize, Vec<ColoredVertex>>) {
     for (key, line) in list {
-        println!(
+        eprintln!(
             "{}->{}",
             key,
             line.iter()

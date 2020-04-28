@@ -28,7 +28,7 @@ pub fn sort(matrix: &graph::Matrix) -> Vec<usize> {
                 row[p] = -1
             },
             None => {
-                eprintln!("Cannot sort graph with cycles.");
+                println!("Cannot sort graph with cycles.");
                 sorted = vec![];
                 break;
             }
@@ -52,8 +52,6 @@ pub fn sort(matrix: &graph::Matrix) -> Vec<usize> {
                     row[key] = next_pred as isize;
                 }
             }
-
-            eprintln!("Row after overwriting: {:?}", row);
         });
 
         sorted.push(vertex);

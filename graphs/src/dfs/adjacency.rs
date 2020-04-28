@@ -36,7 +36,7 @@ pub fn sort(matrix: &adjacency::Matrix) -> Vec<usize> {
     let mut vertex: usize;
     loop {
         // Get last vertex from stack and color it grey.
-        println!("Stack {:?}", stack);
+        eprintln!("Stack {:?}", stack);
         vertex = stack[stack.len() - 1];
         matrix.iter_mut().for_each(|val| {
             val[vertex] = match val[vertex] {
@@ -60,7 +60,7 @@ pub fn sort(matrix: &adjacency::Matrix) -> Vec<usize> {
 
         // If vertex have grey successor there's cycle and we can't sort this graph.
         if let Some(_) = matrix[vertex].iter().find(|&&val| val == 2) {
-            eprintln!("Cannot sort graph with cycles.");
+            println!("Cannot sort graph with cycles.");
             sorted = vec![];
             break;
         }

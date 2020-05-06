@@ -7,7 +7,7 @@ pub struct Matrix {
 }
 
 impl Matrix {
-    /// Creates adjacency matrix from vertex arcs list.
+    /// Creates adjacency matrix from vertex arcs list. Removes redundant arcs.
     pub fn from(data: &[(usize, usize)]) -> Self {
         let vertices: Vec<usize> = data
             .iter()

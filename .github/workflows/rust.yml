@@ -2,7 +2,9 @@ name: Rust
 
 on:
   push:
-    branches: [sorting, graphs]
+    branches: 
+      - sorting
+      - graphs
 
 jobs:
   build:

@@ -8,7 +8,8 @@ on:
 
 jobs:
   build:
-
+    env:
+      working-dir: ./graphs
     runs-on: ubuntu-latest
 
     steps:
@@ -17,11 +18,12 @@ jobs:
       with:
         path: ./cache
         key:  ${{ runner.os }}-cached
-    - name: Pre-build
-      run: cd ./graphs
     - name: Build
+      working-directory: ${{ env.working-dir }}
       run: cargo build --verbose
     - name: Run tests
+      working-directory: ${{ env.working-dir }}
       run: cargo test --verbose
     - name: Make docs
+      working-directory: ${{ env.working-dir }}
       run: cargo doc --verbose

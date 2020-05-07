@@ -1,0 +1,30 @@
+name: Rust
+
+on:
+  push:
+    branches: 
+      - sorting
+      - graphs
+      - graph-cycles
+
+jobs:
+  build:
+    env:
+      working-dir: ./graph-cycles
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/cache@v1.1.2
+      with:
+        path: ./cache
+        key:  ${{ runner.os }}-cached
+    - name: Build
+      working-directory: ${{ env.working-dir }}
+      run: cargo build --verbose
+    - name: Run tests
+      working-directory: ${{ env.working-dir }}
+      run: cargo test --verbose
+    - name: Make docs
+      working-directory: ${{ env.working-dir }}
+      run: cargo doc --verbose

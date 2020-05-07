@@ -18,9 +18,7 @@ jobs:
         path: ./cache
         key:  ${{ runner.os }}-cached
     - name: Build
-      run: 
-        - cd ./graphs
-        - cargo build --verbose
+      run: cd ./graphs && cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
     - name: Make docs

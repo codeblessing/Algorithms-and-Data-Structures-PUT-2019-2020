@@ -1,21 +1,21 @@
 use crate::graph::AdjacencyMatrix;
 
-fn euler_cycle(mut graph: AdjacencyMatrix) -> Result<Vec<usize>, ()> {
+pub fn euler_cycle(mut graph: AdjacencyMatrix) -> Result<Vec<usize>, ()> {
     let size = graph.matrix().len();
 
     if (1..size).any(|vert| graph.deg(vert) % 2 == 1) {
         println!("Graf wejściowy jest acykliczny (Nie zawiera cyklu Eulera).");
         return Err(());
     }
-    
+
     let mut cycle: Vec<usize> = Vec::new();
     let vertex: usize = 1;
-    
+
     find_euler_cycle(vertex, &mut graph, &mut cycle);
-    
+
     if graph.has_edges() {
         println!("Graf wejściowy jest acykliczny (Nie zawiera cyklu Eulera).");
-        return Err(())
+        return Err(());
     }
 
     Ok(cycle)
@@ -52,12 +52,10 @@ mod test {
             vec![0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1],
             vec![0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0],
             vec![0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-            vec![0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0]
+            vec![0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0],
         ];
 
         let matrix = AdjacencyMatrix::from(matrix);
-
-        matrix.visualize_json("eu");
 
         let cycle = euler_cycle(matrix);
 
@@ -82,7 +80,7 @@ mod test {
             vec![0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
             vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
             vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-            vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0]
+            vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0],
         ];
 
         let matrix = AdjacencyMatrix::from(matrix);

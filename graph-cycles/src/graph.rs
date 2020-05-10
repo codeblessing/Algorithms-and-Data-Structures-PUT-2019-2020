@@ -1,39 +1,8 @@
 #![warn(clippy::all)]
-#![allow(dead_code)]
-use serde::{Deserialize, Serialize};
 use std::{
     cmp::Ordering,
     collections::{HashMap, HashSet},
-    fs,
-    io::Write,
 };
-
-#[derive(Serialize, Deserialize)]
-struct Node {
-    id: usize,
-    label: String,
-}
-
-impl Node {
-    pub fn from(id: usize) -> Self {
-        Self {
-            id,
-            label: id.to_string(),
-        }
-    }
-}
-
-#[derive(Serialize)]
-struct Edge {
-    from: usize,
-    to: usize,
-}
-
-impl Edge {
-    pub fn from(from: usize, to: usize) -> Self {
-        Self { from, to }
-    }
-}
 
 #[derive(Clone)]
 pub struct AdjacencyMatrix {
@@ -87,54 +56,6 @@ impl AdjacencyMatrix {
     pub fn matrix(&self) -> Vec<Vec<u8>> {
         self.matrix.clone()
     }
-
-    pub fn visualize_json(&self, prefix: &str) {
-        let nodes_path: String = format!("./{}_nodes.json", prefix);
-        let edges_path: String = format!("./{}_edges.json", prefix);
-
-        if let Ok(mut nodes_file) = fs::OpenOptions::new()
-            .create(true)
-            .write(true)
-            .truncate(true)
-            .open(nodes_path)
-        {
-            let mut nodes: Vec<Node> = Vec::new();
-            for node_id in 1..self.matrix.len() {
-                nodes.push(Node::from(node_id));
-            }
-            nodes_file
-                .write(
-                    serde_json::to_string(&nodes)
-                        .unwrap_or(String::from("[]"))
-                        .as_bytes(),
-                )
-                .unwrap();
-        };
-
-        if let Ok(mut edges_file) = fs::OpenOptions::new()
-            .create(true)
-            .write(true)
-            .truncate(true)
-            .open(edges_path)
-        {
-            let mut edges: Vec<Edge> = Vec::new();
-            self.matrix.iter().enumerate().for_each(|(nr, row)| {
-                row.iter()
-                    .enumerate()
-                    .filter(|&(_, &val)| val == 1)
-                    .for_each(|(to, _)| {
-                        edges.push(Edge::from(nr, to));
-                    })
-            });
-            edges_file
-                .write(
-                    serde_json::to_string(&edges)
-                        .unwrap_or(String::from("[]"))
-                        .as_bytes(),
-                )
-                .unwrap();
-        };
-    }
 }
 
 impl From<Vec<Vec<u8>>> for AdjacencyMatrix {
@@ -157,7 +78,8 @@ impl From<&[(usize, usize)]> for AdjacencyMatrix {
                 acc.insert(b);
                 acc
             })
-            .len();
+            .len()
+            + 1;
 
         let mut matrix: Vec<Vec<u8>> = vec![vec![0; v_count]; v_count];
 
@@ -193,6 +115,12 @@ impl SuccessorsList {
         }
     }
 
+    pub fn has_edges(&self) -> bool {
+        self.list
+            .iter()
+            .any(|(_, successors)| !successors.is_empty())
+    }
+
     /// Removes edge `from` -> `to` from Successors List.
     /// # Returns
     /// If `to` is successor of `from` removes it and returns `Ok(())`.
@@ -212,6 +140,8 @@ impl SuccessorsList {
             Err(())
         }
     }
+
+    /// Removes `node` occurences in graph.
 
     /// Returns `node`\`s output degree (number of arcs starting at `node`)
     pub fn deg_out(&self, node: usize) -> usize {
@@ -258,7 +188,11 @@ impl From<&[(usize, usize)]> for SuccessorsList {
         let mut list: HashMap<usize, Vec<usize>> = HashMap::new();
         for &(from, to) in arcs {
             list.entry(from)
-                .and_modify(|entry| entry.push(to))
+                .and_modify(|entry| {
+                    if !entry.contains(&to) {
+                        entry.push(to)
+                    }
+                })
                 .or_insert_with(|| vec![to]);
         }
         Self { list }

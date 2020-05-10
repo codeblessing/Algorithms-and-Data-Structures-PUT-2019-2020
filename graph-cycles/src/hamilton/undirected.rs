@@ -31,7 +31,9 @@ pub fn hamilton_cycles(graph: graph::AdjacencyMatrix) -> Result<Vec<Vec<usize>>,
         handles.push(handle);
     }
     drop(tx);
+
     let mut cycles = vec![];
+    
     for msg in rx {
         cycles.push(msg);
     }

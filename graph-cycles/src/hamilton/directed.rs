@@ -73,10 +73,10 @@ fn find_ham_cycle_from_vertex(
                 exclude.clear();
             }
             // If successor doesn't exist or is on stack already.
-            // If stack contains all vertices break and check for edge between first and last (line 97).
-            // If stack is empty (so current vertex is first and has no successors) return (line 87).
+            // If stack contains all vertices break and check for edge between first and last.
+            // If stack is empty (so current vertex is first and has no successors) return.
             // Otherwise set vertices from first to current (because vertices are traversed in increase order)
-            // as excluded and set current's predecessor as current vertex (line 89).
+            // as excluded and set current's predecessor as current vertex.
             None => {
                 if stack.len() == size - 1 {
                     stack.push(current);
@@ -93,13 +93,6 @@ fn find_ham_cycle_from_vertex(
                 }
             }
         }
-
-        eprintln!(
-r"Stack: {:?}
-current: {}",
-stack,
-current
-);
     }
 
     if check_edge(current, stack[0], &list) {
@@ -162,7 +155,6 @@ mod test {
         assert!(cycles.iter().any(|v| *v == vec![1, 2, 3]));
         assert!(cycles.iter().any(|v| *v == vec![2, 3, 1]));
         assert!(cycles.iter().any(|v| *v == vec![3, 1, 2]));
-
     }
     #[test]
     fn test_find_ham_cycle() {
@@ -175,7 +167,7 @@ mod test {
         let excluded: Vec<Vec<usize>> = Vec::new();
 
         let cycle = find_ham_cycle_from_vertex(list.clone(), 1, &excluded).unwrap();
-        
+
         assert_eq!(cycle, vec![1, 2, 3]);
     }
 

@@ -1,97 +1,100 @@
-// use crate::graph::SuccessorsList;
-// use std::{cmp::Ordering, collections::HashMap};
+use crate::graph::SuccessorsList;
 
-// fn euler_cycle(graph: SuccessorsList) -> Result<Vec<usize>, ()> {
-//     let mut list = graph.list();
-//     let size = list.len();
+pub fn euler_cycle<T>(graph: T) -> Result<Vec<usize>, ()>
+where
+    T: Into<SuccessorsList>,
+{
+    let mut graph = graph.into();
+    let size = graph.list().len();
 
-//     if (1..size).any(|vert| deg(vert, &list) == 1) {
-//         println!("Graf wejściowy jest acykliczny (Nie zawiera cyklu Eulera).");
-//         return Err(());
-//     }
+    if (1..size).any(|vert| graph.deg(vert) != 0) {
+        println!("Graf wejściowy jest acykliczny (Nie zawiera cyklu Eulera).");
+        return Err(());
+    }
 
-//     let mut cycle: Vec<usize> = Vec::new();
-//     let vertex: usize = 1;
+    let mut cycle: Vec<usize> = Vec::new();
+    let vertex: usize = 1;
 
-//     find_euler_cycle(vertex, &mut list, &mut cycle);
+    find_euler_cycle(vertex, &mut graph, &mut cycle);
 
-//     Ok(cycle)
-// }
+    if graph.has_edges() {
+        println!("Graf wejściowy jest acykliczny (Nie zawiera cyklu Eulera).");
+        return Err(());
+    }
 
-// fn find_euler_cycle(vertex: usize, list: &mut HashMap<usize, Vec<usize>>, stack: &mut Vec<usize>) {
-//     loop {
-//         match next(vertex, list) {
-//             None => break,
-//             Some(next) => {
-//                 remove_edge(vertex, next, list);
-//                 find_euler_cycle(next, list, stack);
-//             }
-//         }
-//     }
-//     stack.push(vertex);
-// }
+    Ok(cycle)
+}
 
-// fn remove_edge(first: usize, second: usize, list: &mut HashMap<usize, Vec<usize>>) {
-//     list[&first] = list[&first].iter().filter(|&&vert| vert != second).copied().collect();
-// }
+fn find_euler_cycle(vertex: usize, list: &mut SuccessorsList, stack: &mut Vec<usize>) {
+    loop {
+        match list.next(vertex) {
+            None => break,
+            Some(next) => {
+                list.remove_edge(vertex, next).unwrap_or(());
+                find_euler_cycle(next, list, stack);
+            }
+        }
+    }
+    stack.push(vertex);
+}
 
-// fn next(vertex: usize, matrix: &HashMap<usize, Vec<usize>>) -> Option<usize> {
-//     let successors: Vec<usize> = matrix[vertex]
-//         .iter()
-//         .enumerate()
-//         .filter(|&(_, &val)| val == 1)
-//         .map(|(key, _)| key)
-//         .collect();
-//     if successors.is_empty() {
-//         None
-//     } else {
-//         Some(successors[0])
-//     }
-// }
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::graph::SuccessorsList;
+    use std::collections::HashMap;
 
-// fn has_edges(matrix: &Vec<Vec<u8>>) -> bool {
-//     matrix.iter().any(|row| row.iter().any(|&val| val != 0))
-// }
+    #[test]
+    fn test_find_euler_cycle() {
+        let mut list: HashMap<usize, Vec<usize>> = HashMap::new();
+        list.insert(1, vec![2, 3]);
+        list.insert(2, vec![3, 5]);
+        list.insert(3, vec![1, 4]);
+        list.insert(4, vec![2]);
+        list.insert(5, vec![1]);
 
-// fn deg(vertex: usize, list: &HashMap<usize, Vec<usize>>) -> usize {
-//     let predecessors_count: usize = 0;
-//     list.iter().for_each(|(_, succ)| {
-//         if succ.contains(&vertex) {
-//             predecessors_count += 1;
-//         }
-//     });
+        let list = SuccessorsList::from(list);
 
-//     match list[&vertex].len().cmp(&predecessors_count) {
-//         Ordering::Less | Ordering::Greater => 1,
-//         Ordering::Equal => 0,
-//     }
-// }
+        let cycle = euler_cycle(list);
 
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-//     use crate::graph::AdjacencyMatrix;
+        assert!(cycle.is_ok());
 
-//     #[test]
-//     fn test_find_euler_cycle() {
-//         let matrix: Vec<Vec<u8>> = vec![
-//             vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-//             vec![0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-//             vec![0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-//             vec![0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1],
-//             vec![0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0],
-//             vec![0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0],
-//             vec![0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0],
-//             vec![0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1],
-//             vec![0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0],
-//             vec![0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-//             vec![0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0],
-//         ];
+        eprintln!("{:?}", cycle.unwrap());
+    }
 
-//         let matrix = AdjacencyMatrix::from(matrix);
+    #[test]
+    fn test_find_euler_cycle_from_arcs_list() {
+        let arcs: Vec<(usize, usize)> = vec![
+            (1, 2),
+            (1, 3),
+            (2, 3),
+            (3, 1),
+            (2, 5),
+            (3, 4),
+            (4, 2),
+            (5, 1),
+            (3, 4),
+        ];
 
-//         let cycle = euler_cycle(matrix).unwrap();
+        let list = SuccessorsList::from(arcs.as_slice());
 
-//         eprintln!("{:?}", cycle);
-//     }
-// }
+        for (key, entry) in list.list() {
+            eprintln!("{} -> {:?}", key, entry);
+        }
+
+        let cycle = euler_cycle(list);
+
+        assert!(cycle.is_ok());
+
+        eprintln!("{:?}", cycle.unwrap());
+    }
+
+    #[test]
+    fn test_no_euler_cycle() {
+        let arcs: Vec<(usize, usize)> = vec![(1, 2), (2, 3), (3, 4), (4, 1), (5, 5)];
+
+        let cycle = euler_cycle(arcs.as_slice());
+
+        assert!(cycle.is_err());
+    }
+}

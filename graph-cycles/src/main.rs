@@ -1,6 +1,7 @@
 mod euler;
 mod graph;
 mod hamilton;
+mod test;
 
 use graph::{AdjacencyMatrix, SuccessorsList};
 
@@ -28,28 +29,72 @@ fn main() {
 
     if arcs.capacity() == 0 {
         let mut line = String::new();
+        let arc_count: usize;
         println!("Podaj listę łuków:");
-        std::io::stdin().read_line(&mut line).unwrap_or_else(|err| {
-            error!("Nie można wczytać danych!\nError message: {}", err);
-            0
-        });
-        let arc_count: usize = line
-            .split_whitespace()
-            .skip(1)
-            .map(|count| count.parse::<usize>().unwrap())
-            .next()
-            .unwrap();
+        loop {
+            match std::io::stdin().read_line(&mut line).ok() {
+                Some(_) => {
+                    match line
+                        .split_whitespace()
+                        .skip(1)
+                        .map(|count| count.parse::<usize>().ok())
+                        .next()
+                        .flatten()
+                    {
+                        Some(count) => {
+                            arc_count = count;
+                            break;
+                        }
+                        None => {
+                            error!("Nie można wczytać liczby krawędzi, spróbuj jeszcze raz");
+                            continue;
+                        }
+                    }
+                }
+                None => {
+                    error!("Nie można wczytać liczby krawędzi, spróbuj jeszcze raz");
+                    continue;
+                }
+            }
+        }
 
         line.clear();
+
         for _ in 0..arc_count {
             std::io::stdin().read_line(&mut line).unwrap_or(0);
             line.push('\n');
         }
+
         arcs = parse_input(line);
     }
 
     let adjacency_matrix = AdjacencyMatrix::from(arcs.as_slice());
     let successors_list = SuccessorsList::from(arcs.as_slice());
+
+    test!(
+        10,
+        "./out/ham_direct",
+        hamilton::directed::hamilton_cycles,
+        successors_list.clone()
+    );
+    test!(
+        10,
+        "./out/ham_undire",
+        hamilton::undirected::hamilton_cycles,
+        successors_list.clone()
+    );
+    test!(
+        10,
+        "./out/eul_direct",
+        euler::directed::euler_cycle,
+        successors_list.clone()
+    );
+    test!(
+        10,
+        "./out/eul_undire",
+        euler::undirected::euler_cycle,
+        successors_list.clone()
+    );
 
     let hamilton_directed = hamilton::directed::hamilton_cycles(successors_list.clone());
     let hamilton_undirected = hamilton::undirected::hamilton_cycles(adjacency_matrix.clone());

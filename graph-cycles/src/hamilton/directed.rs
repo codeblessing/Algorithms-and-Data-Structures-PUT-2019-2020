@@ -1,72 +1,62 @@
-use crate::graph;
+use crate::graph::SuccessorsList;
 use std::sync::mpsc;
-use std::{collections::HashMap, thread};
+use std::thread;
+use log::debug;
 
-pub fn hamilton_cycles(graph: graph::SuccessorsList) -> Result<Vec<Vec<usize>>, ()> {
+pub fn hamilton_cycle(graph: SuccessorsList) -> Option<Vec<usize>> {
     let size = graph.list().len();
     if size < 3 {
-        eprintln!("Graf wejściowy jest acykliczny");
-        return Err(());
+        eprintln!("Graf wejściowy jest acykliczny (nie zawiera cyklu Hamiltona)");
+        return None;
     }
 
     let (tx, rx) = mpsc::channel();
-    let mut handles = vec![];
 
     for vert in 1..=size {
         let transmitter = mpsc::Sender::clone(&tx);
         let list = graph.clone();
-        let handle = thread::spawn(move || {
-            let mut excluded = vec![];
+        thread::spawn(move || {
             loop {
-                let cycle = find_ham_cycle_from_vertex(list.clone(), vert, &excluded);
+                let cycle = cycle_from_node(list.clone(), vert);
                 match cycle {
-                    Ok(val) => {
-                        eprintln!("Thread {}: cycle: {:?}", vert, val);
-                        excluded.push(val.clone());
-                        transmitter.send(val).unwrap();
+                    Some(val) => {
+                        debug!("Thread {}: cycle: {:?}", vert, val);
+                        transmitter.send(val).unwrap_or(());
                     }
-                    Err(_) => break,
+                    None => break,
                 }
             }
         });
-        handles.push(handle);
     }
+
     drop(tx);
-    let mut cycles = vec![];
+    let mut cycle = None;
     for msg in rx {
-        cycles.push(msg);
+        cycle = Some(msg);
+        break;
     }
 
-    for handle in handles {
-        handle.join().unwrap();
-    }
-
-    if cycles.is_empty() {
+    if let None = cycle {
         println!("Graf wejściowy jest acykliczny (nie zawiera cyklu Hamiltona)");
-        Err(())
+        None
     } else {
-        Ok(cycles)
+        cycle
     }
 }
 
-/// Searches for Hamilton cycle starting at `vertex` and searching for cycles other than `excluded`.
-fn find_ham_cycle_from_vertex(
-    graph: graph::SuccessorsList,
-    vertex: usize,
-    excluded: &Vec<Vec<usize>>,
-) -> Result<Vec<usize>, ()> {
-    let list = graph.list();
-    let size = list.len();
+/// Searches for Hamilton cycle starting at `node` and searching for cycles other than `excluded`.
+fn cycle_from_node(graph: SuccessorsList, node: usize) -> Option<Vec<usize>> {
+    let size = graph.list().len();
 
     let mut stack: Vec<usize> = Vec::new();
     let mut exclude: Vec<usize> = Vec::new();
-    let mut current: usize = vertex;
+    let mut current: usize = node;
 
     loop {
         // Find successor
-        match next(current, &stack, &list, &exclude) {
+        match next(current, &stack, &graph, &exclude) {
             // If successor exists and is not on stack yet nor in excluded vertices.
-            // Push current vertex to stack, set it's successor as current vertex and clear excluded vertices.
+            // Push current node to stack, set it's successor as current node and clear excluded vertices.
             Some(key) => {
                 stack.push(current);
                 current = key;
@@ -74,19 +64,16 @@ fn find_ham_cycle_from_vertex(
             }
             // If successor doesn't exist or is on stack already.
             // If stack contains all vertices break and check for edge between first and last.
-            // If stack is empty (so current vertex is first and has no successors) return.
-            // Otherwise set vertices from first to current (because vertices are traversed in increase order)
-            // as excluded and set current's predecessor as current vertex.
+            // If stack is empty (so current node is first and has no successors) return.
+            // Otherwise step back. [set vertices from first to current (because vertices are traversed in increase order)
+            // as excluded and set current's predecessor as current node].
             None => {
                 if stack.len() == size - 1 {
                     stack.push(current);
-                    if !excluded.contains(&stack) {
-                        break;
-                    }
-                    stack.pop();
+                    break;
                 }
                 if stack.is_empty() {
-                    return Err(());
+                    return None;
                 } else {
                     exclude = (1..=current).collect();
                     current = stack.pop().unwrap();
@@ -95,93 +82,84 @@ fn find_ham_cycle_from_vertex(
         }
     }
 
-    if check_edge(current, stack[0], &list) {
-        Ok(stack)
-    } else {
-        Err(())
-    }
-}
-
-/// Searches for free successor of `vertex`. Returns successor if found otherwise returns `None`.
-fn next(
-    vertex: usize,
-    stack: &[usize],
-    list: &HashMap<usize, Vec<usize>>,
-    exclude: &[usize],
-) -> Option<usize> {
-    // Get successors, that are not on stack or in excluded.
-    let successors: Vec<usize> = list[&vertex]
-        .iter()
-        .filter(|&val| !stack.contains(val) && !exclude.contains(val))
-        .copied()
-        .collect();
-
-    // If there are such successors return first of them else return None.
-    if successors.len() > 0 {
-        Some(successors[0])
+    if check_edge(current, stack[0], &graph) {
+        Some(stack)
     } else {
         None
     }
 }
 
+/// Searches for free successor of `node`. Returns successor if found otherwise returns `None`.
+fn next(node: usize, stack: &[usize], list: &SuccessorsList, exclude: &[usize]) -> Option<usize> {
+    if !list.list().contains_key(&node) {
+        None
+    } else {
+        // Get successors, that are not on stack or in excluded.
+        let successors: Vec<usize> = list.list()[&node]
+            .iter()
+            .filter(|&val| !stack.contains(val) && !exclude.contains(val))
+            .copied()
+            .collect();
+
+        // If there are such successors return first of them else return None.
+        if successors.len() > 0 {
+            Some(successors[0])
+        } else {
+            None
+        }
+    }
+}
+
 /// Checks whether edge first -> second exists.
-fn check_edge(
-    first_vert: usize,
-    second_vert: usize,
-    successors_list: &HashMap<usize, Vec<usize>>,
-) -> bool {
-    successors_list[&first_vert].contains(&second_vert)
+fn check_edge(from: usize, to: usize, list: &SuccessorsList) -> bool {
+    if !list.list().contains_key(&from) || !list.list().contains_key(&to) {
+        false
+    } else {
+        list.list()[&from].contains(&to)
+    }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::graph::SuccessorsList;
+    use log::info;
 
     #[test]
-    fn test_find_all_ham_cycles() {
-        let mut list: HashMap<usize, Vec<usize>> = HashMap::new();
-        list.insert(1, vec![2]);
-        list.insert(2, vec![3]);
-        list.insert(3, vec![1]);
-
-        let list = graph::SuccessorsList::from(list);
-
-        let cycles = hamilton_cycles(list).unwrap();
-
-        for (key, cycle) in cycles.iter().enumerate() {
-            eprintln!("Cycle {}: {:?}", key, cycle);
-        }
-
-        assert!(cycles.iter().any(|v| *v == vec![1, 2, 3]));
-        assert!(cycles.iter().any(|v| *v == vec![2, 3, 1]));
-        assert!(cycles.iter().any(|v| *v == vec![3, 1, 2]));
-    }
-    #[test]
-    fn test_find_ham_cycle() {
-        let mut list: HashMap<usize, Vec<usize>> = HashMap::new();
-        list.insert(1, vec![2]);
-        list.insert(2, vec![3]);
-        list.insert(3, vec![1]);
-
-        let list = graph::SuccessorsList::from(list);
-        let excluded: Vec<Vec<usize>> = Vec::new();
-
-        let cycle = find_ham_cycle_from_vertex(list.clone(), 1, &excluded).unwrap();
-
-        assert_eq!(cycle, vec![1, 2, 3]);
+    fn test_find_hamilton_cycle() {
+        let list = SuccessorsList::from(vec![
+            (1, 2),
+            (2, 3),
+            (2, 4),
+            (3, 4),
+            (3, 5),
+            (4, 1),
+            (4, 5),
+            (5, 1),
+        ]);
+        let cycle = hamilton_cycle(list);
+        assert_ne!(cycle, None);
+        eprintln!("[TEST] Found cycle: {:?}", cycle);
     }
 
     #[test]
-    fn test_no_ham_cycle() {
-        let mut list: HashMap<usize, Vec<usize>> = HashMap::new();
-        list.insert(1, vec![2]);
-        list.insert(2, vec![3]);
-        list.insert(3, vec![]);
+    fn test_run_with_acyclic_graph() {
+        let list = SuccessorsList::from(vec![(1, 2), (1, 3), (1, 4), (1, 5), (2, 3), (2, 4), (2, 5), (3, 4), (3, 5), (4, 5)]);
+        let cycle = hamilton_cycle(list);
+        assert_eq!(cycle, None);
+    }
 
-        let list = graph::SuccessorsList::from(list);
+    #[test]
+    fn test_graph_with_two_nodes() {
+        let list = SuccessorsList::from(vec![(1, 2), (2, 1)]);
+        let cycle = hamilton_cycle(list);
+        assert_eq!(cycle, None);
+    }
 
-        let cycle = find_ham_cycle_from_vertex(list, 1, &vec![]);
-
-        assert_eq!(cycle, Err(()));
+    #[test]
+    fn test_with_empty_graph() {
+        let list = SuccessorsList::new();
+        let cycle = hamilton_cycle(list);
+        assert_eq!(cycle, None);
     }
 }

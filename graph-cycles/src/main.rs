@@ -8,6 +8,7 @@ use graph::{AdjacencyMatrix, SuccessorsList};
 use clap::{App, Arg, ArgMatches};
 use log::{error, info, warn};
 use std::fs;
+use std::io::Write;
 
 fn main() {
     setup_logger().unwrap();
@@ -62,7 +63,7 @@ fn main() {
 
         for _ in 0..arc_count {
             std::io::stdin().read_line(&mut line).unwrap_or(0);
-            line.push('\n');
+            // line.push('\n');
         }
 
         arcs = parse_input(line);
@@ -71,76 +72,77 @@ fn main() {
     let adjacency_matrix = AdjacencyMatrix::from(arcs.as_slice());
     let successors_list = SuccessorsList::from(arcs.as_slice());
 
-    test!(
-        10,
-        "./out/ham_direct",
-        hamilton::directed::hamilton_cycles,
-        successors_list.clone()
-    );
-    test!(
-        10,
-        "./out/ham_undire",
-        hamilton::undirected::hamilton_cycles,
-        successors_list.clone()
-    );
-    test!(
-        10,
-        "./out/eul_direct",
-        euler::directed::euler_cycle,
-        successors_list.clone()
-    );
-    test!(
-        10,
-        "./out/eul_undire",
-        euler::undirected::euler_cycle,
-        successors_list.clone()
-    );
+    // test!(
+    //     10,
+    //     "./out/ham_direct",
+    //     hamilton::directed::hamilton_cycles,
+    //     successors_list.clone()
+    // );
+    // test!(
+    //     10,
+    //     "./out/ham_undire",
+    //     hamilton::undirected::hamilton_cycles,
+    //     adjacency_matrix.clone()
+    // );
+    // test!(
+    //     10,
+    //     "./out/eul_direct",
+    //     euler::directed::euler_cycle,
+    //     successors_list.clone()
+    // );
+    // test!(
+    //     10,
+    //     "./out/eul_undire",
+    //     euler::undirected::euler_cycle,
+    //     adjacency_matrix.clone()
+    // );
 
-    let hamilton_directed = hamilton::directed::hamilton_cycles(successors_list.clone());
-    let hamilton_undirected = hamilton::undirected::hamilton_cycles(adjacency_matrix.clone());
-    let euler_directed = euler::directed::euler_cycle(successors_list.clone());
-    let euler_undirected = euler::undirected::euler_cycle(adjacency_matrix.clone());
+    // let hamilton_directed = hamilton::directed::hamilton_cycles(successors_list.clone());
+    // let hamilton_undirected = hamilton::undirected::hamilton_cycles(adjacency_matrix.clone());
+    // let euler_directed = euler::directed::euler_cycle(successors_list.clone());
+    // let euler_undirected = euler::undirected::euler_cycle(adjacency_matrix.clone());
 
-    match hamilton_directed {
-        Ok(cycles) => {
-            println!("Znaleziono następujące cykle Hamiltona (graf skierowany):");
-            for cycle in cycles {
-                println!("{:?}", cycle);
-            }
-        }
-        Err(_) => println!("Nie znaleziono cyklu Hamiltona w grafie skierowanym"),
-    }
+    // match hamilton_directed {
+    //     Ok(cycles) => {
+    //         println!("Znaleziono następujące cykle Hamiltona (graf skierowany):");
+    //         for cycle in cycles {
+    //             println!("{:?}", cycle);
+    //         }
+    //     }
+    //     Err(_) => println!("Nie znaleziono cyklu Hamiltona w grafie skierowanym"),
+    // }
 
-    match hamilton_undirected {
-        Ok(cycles) => {
-            println!("Znaleziono następujące cykle Hamiltona (graf nieskierowany):");
-            for cycle in cycles {
-                println!("{:?}", cycle);
-            }
-        }
-        Err(_) => println!("Nie znaleziono cyklu Hamiltona w grafie nieskierowanym"),
-    }
+    // match hamilton_undirected {
+    //     Ok(cycles) => {
+    //         println!("Znaleziono następujące cykle Hamiltona (graf nieskierowany):");
+    //         for cycle in cycles {
+    //             println!("{:?}", cycle);
+    //         }
+    //     }
+    //     Err(_) => println!("Nie znaleziono cyklu Hamiltona w grafie nieskierowanym"),
+    // }
 
-    match euler_directed {
-        Ok(cycle) => {
-            println!("Znaleziono następujący cykl Eulera (graf skierowany):");
-            println!("{:?}", cycle);
-        }
-        Err(_) => println!("Nie znaleziono cyklu Eulera w grafie skierowanym"),
-    }
+    // match euler_directed {
+    //     Ok(cycle) => {
+    //         println!("Znaleziono następujący cykl Eulera (graf skierowany):");
+    //         println!("{:?}", cycle);
+    //     }
+    //     Err(_) => println!("Nie znaleziono cyklu Eulera w grafie skierowanym"),
+    // }
 
-    match euler_undirected {
-        Ok(cycle) => {
-            println!("Znaleziono następujący cykl Eulera (graf nieskierowany):");
-            println!("{:?}", cycle);
-        }
-        Err(_) => println!("Nie znaleziono cyklu Eulera w grafie nieskierowanym"),
-    }
+    // match euler_undirected {
+    //     Ok(cycle) => {
+    //         println!("Znaleziono następujący cykl Eulera (graf nieskierowany):");
+    //         println!("{:?}", cycle);
+    //     }
+    //     Err(_) => println!("Nie znaleziono cyklu Eulera w grafie nieskierowanym"),
+    // }
 }
 
 fn parse_input(input: String) -> Vec<(usize, usize)> {
     let mut out: Vec<(usize, usize)> = Vec::new();
     for line in input.lines() {
+        info!("{}", line);
         let mut nodes: Vec<_> = line
             .split_whitespace()
             .map(|node| node.parse::<usize>())
@@ -152,6 +154,8 @@ fn parse_input(input: String) -> Vec<(usize, usize)> {
             out.push((nodes.remove(0).unwrap(), nodes.remove(0).unwrap()));
         }
     }
+
+    info!("{:?}", out);
 
     out
 }

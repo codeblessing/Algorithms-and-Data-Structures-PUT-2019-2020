@@ -1,6 +1,5 @@
 #![warn(clippy::all)]
-use log::{debug, error, info, trace, warn};
-use std::cmp::Ordering;
+use log::warn;
 use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -65,12 +64,12 @@ impl AdjacencyMatrix {
     pub fn matrix_mut(&self) -> Vec<Vec<u8>> {
         self.matrix.clone()
     }
-    
+
     /// Returns reference to adjacency matrix as two-dimensional `Vec`.
     pub fn matrix(&self) -> &Vec<Vec<u8>> {
         &self.matrix
     }
-    
+
     /// Returns reference to nodes.
     pub fn nodes(&self) -> &HashSet<usize> {
         &self.nodes
@@ -142,10 +141,10 @@ impl SuccessorsList {
                 self.list.insert(
                     from,
                     self.list[&from]
-                    .iter()
-                    .filter(|&&vert| vert != to)
-                    .copied()
-                    .collect(),
+                        .iter()
+                        .filter(|&&vert| vert != to)
+                        .copied()
+                        .collect(),
                 );
             } else {
                 warn!("{} -> {} nie jest krawędzią grafu", from, to);
@@ -158,8 +157,7 @@ impl SuccessorsList {
     pub fn deg(&self, node: usize) -> Option<isize> {
         if !self.list.contains_key(&node) {
             None
-        }
-        else {
+        } else {
             let deg_out = self.list[&node].len() as isize;
             let mut deg_in: isize = 0;
             self.list.iter().for_each(|(_, succ)| {
@@ -238,12 +236,12 @@ mod test_adjacency_matrix {
 
             nodes: (1..=3).collect(),
         };
-        assert_eq!(AdjacencyMatrix::from(vec![(1, 2), (2, 3)]), matrix);
+        assert_eq!(AdjacencyMatrix::from(vec![(3, 2), (1, 2), (2, 3)]), matrix);
     }
 
     #[test]
     fn test_get_next() {
-        let matrix = AdjacencyMatrix::from(vec![(1, 2), (2, 3), (2, 4), (3, 4), (4, 1)]);
+        let matrix = AdjacencyMatrix::from(vec![(4, 5), (1, 2), (2, 3), (2, 4), (3, 4), (4, 1)]);
         assert_eq!(matrix.next(1), Some(2));
         assert_eq!(matrix.next(2), Some(1));
         assert_eq!(matrix.next(4), Some(1));
@@ -258,7 +256,7 @@ mod test_adjacency_matrix {
 
     #[test]
     fn test_remove_edge_from_matrix() {
-        let mut matrix = AdjacencyMatrix::from(vec![(1, 2), (1, 3), (2, 3), (3, 1)]);
+        let mut matrix = AdjacencyMatrix::from(vec![(3, 4), (1, 2), (1, 3), (2, 3), (3, 1)]);
         assert_eq!(matrix.next(1), Some(2));
         matrix.remove_edge(1, 2);
         assert_eq!(matrix.next(1), Some(3));
@@ -266,7 +264,8 @@ mod test_adjacency_matrix {
 
     #[test]
     fn test_check_node_degree() {
-        let matrix = AdjacencyMatrix::from(vec![(1, 2), (1, 3), (2, 3), (3, 4), (3, 5), (4, 5)]);
+        let matrix =
+            AdjacencyMatrix::from(vec![(5, 6), (1, 2), (1, 3), (2, 3), (3, 4), (3, 5), (4, 5)]);
         assert_eq!(matrix.deg(1), Some(2));
         assert_eq!(matrix.deg(2), Some(2));
         assert_eq!(matrix.deg(3), Some(4));
@@ -288,7 +287,7 @@ mod test_adjacency_matrix {
         };
 
         let empty_matrix = AdjacencyMatrix::new();
-        let matrix = AdjacencyMatrix::from(vec![(1, 2), (2, 3), (2, 5), (3, 4), (3, 5)]);
+        let matrix = AdjacencyMatrix::from(vec![(5, 5), (1, 2), (2, 3), (2, 5), (3, 4), (3, 5)]);
 
         assert!(!no_edges.has_edges());
         assert!(!empty_matrix.has_edges());
@@ -321,14 +320,14 @@ mod test_successors_list {
         let list = SuccessorsList { list };
 
         assert_eq!(
-            SuccessorsList::from(vec![(1, 2), (1, 3), (2, 3), (3, 1), (3, 4)]),
+            SuccessorsList::from(vec![(4, 5), (1, 2), (1, 3), (2, 3), (3, 1), (3, 4)]),
             list
         );
     }
 
     #[test]
     fn test_get_next() {
-        let list = SuccessorsList::from(vec![(1, 2), (2, 3), (2, 4), (3, 4), (4, 1)]);
+        let list = SuccessorsList::from(vec![(4, 5), (1, 2), (2, 3), (2, 4), (3, 4), (4, 1)]);
 
         assert_eq!(list.next(1), Some(2));
         assert_eq!(list.next(2), Some(3));
@@ -345,7 +344,7 @@ mod test_successors_list {
 
     #[test]
     fn test_remove_edge_from_list() {
-        let mut list = SuccessorsList::from(vec![(1, 2), (1, 3), (2, 3), (3, 1)]);
+        let mut list = SuccessorsList::from(vec![(3, 4), (1, 2), (1, 3), (2, 3), (3, 1)]);
         assert_eq!(list.next(1), Some(2));
         list.remove_edge(1, 2);
         assert_eq!(list.next(1), Some(3));
@@ -353,7 +352,7 @@ mod test_successors_list {
 
     #[test]
     fn test_check_node_degree() {
-        let list = SuccessorsList::from(vec![(1, 2), (1, 3), (2, 3), (3, 4), (3, 5), (4, 5)]);
+        let list = SuccessorsList::from(vec![(5, 6), (1, 2), (1, 3), (2, 3), (3, 4), (3, 5), (4, 5)]);
         assert_eq!(list.deg(1), Some(2));
         assert_eq!(list.deg(2), Some(0));
         assert_eq!(list.deg(3), Some(0));
@@ -364,8 +363,10 @@ mod test_successors_list {
 
     #[test]
     fn test_has_edges() {
-        let list = SuccessorsList::from(vec![(1, 2), (2, 3), (3, 1)]);
-        let no_edges = SuccessorsList { list: (0..5).map(|key| (key, Vec::with_capacity(2))).collect() };
+        let list = SuccessorsList::from(vec![(3, 3), (1, 2), (2, 3), (3, 1)]);
+        let no_edges = SuccessorsList {
+            list: (0..5).map(|key| (key, Vec::with_capacity(2))).collect(),
+        };
         let empty = SuccessorsList::new();
 
         assert!(list.has_edges());

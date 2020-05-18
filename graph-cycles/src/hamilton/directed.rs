@@ -122,6 +122,7 @@ mod test {
     #[test]
     fn test_find_hamilton_cycle() {
         let list = SuccessorsList::from(vec![
+            (5, 8),
             (1, 2),
             (2, 3),
             (2, 4),
@@ -138,14 +139,14 @@ mod test {
 
     #[test]
     fn test_run_with_acyclic_graph() {
-        let list = SuccessorsList::from(vec![(1, 2), (1, 3), (1, 4), (1, 5), (2, 3), (2, 4), (2, 5), (3, 4), (3, 5), (4, 5)]);
+        let list = SuccessorsList::from(vec![(5, 10), (1, 2), (1, 3), (1, 4), (1, 5), (2, 3), (2, 4), (2, 5), (3, 4), (3, 5), (4, 5)]);
         let cycle = hamilton_cycle(list);
         assert_eq!(cycle, None);
     }
 
     #[test]
     fn test_graph_with_two_nodes() {
-        let list = SuccessorsList::from(vec![(1, 2), (2, 1)]);
+        let list = SuccessorsList::from(vec![(2, 2), (1, 2), (2, 1)]);
         let cycle = hamilton_cycle(list);
         assert_eq!(cycle, None);
     }

@@ -125,7 +125,7 @@ mod test {
 
     #[test]
     fn test_find_hamilton_cycle() {
-        let arcs = vec![(1, 2), (1, 3), (2, 1), (2, 3), (3, 1), (3, 2)];
+        let arcs = vec![(3, 6), (1, 2), (1, 3), (2, 1), (2, 3), (3, 1), (3, 2)];
 
         let matrix = AdjacencyMatrix::from(arcs);
 
@@ -138,6 +138,7 @@ mod test {
     #[test]
     fn test_run_with_acyclic_graph() {
         let arcs = vec![
+            (7, 6),
             (1, 2),
             (1, 3),
             (2, 4),
@@ -154,7 +155,7 @@ mod test {
 
     #[test]
     fn test_no_hamilton_cycle() {
-        let arcs = vec![(1, 2), (2, 3), (3, 4), (4, 5)];
+        let arcs = vec![(5, 4), (1, 2), (2, 3), (3, 4), (4, 5)];
         let matrix = AdjacencyMatrix::from(arcs);
 
         let cycle = hamilton_cycle(matrix);

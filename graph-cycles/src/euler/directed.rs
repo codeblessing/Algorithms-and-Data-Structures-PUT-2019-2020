@@ -49,13 +49,7 @@ mod test {
 
     #[test]
     fn test_find_euler_cycle() {
-        let mut list: HashMap<usize, Vec<usize>> = HashMap::new();
-        list.insert(1, vec![2, 3]);
-        list.insert(2, vec![3, 5]);
-        list.insert(3, vec![1, 4]);
-        list.insert(4, vec![2]);
-        list.insert(5, vec![1]);
-        let arcs = vec![(1, 2), (1, 3), (2, 3), (2, 5), (3, 1), (3, 4), (4, 2), (5, 1)];
+        let arcs = vec![(5, 8), (1, 2), (1, 3), (2, 3), (2, 5), (3, 1), (3, 4), (4, 2), (5, 1)];
 
         let list = SuccessorsList::from(arcs);
 
@@ -67,31 +61,8 @@ mod test {
     }
 
     #[test]
-    fn test_find_euler_cycle_from_arcs_list() {
-        let arcs: Vec<(usize, usize)> = vec![
-            (1, 2),
-            (1, 3),
-            (2, 3),
-            (3, 1),
-            (2, 5),
-            (3, 4),
-            (4, 2),
-            (5, 1),
-            (3, 4),
-        ];
-
-        let list = SuccessorsList::from(arcs.as_slice());
-
-        let cycle = euler_cycle(list);
-
-        assert!(cycle.is_some());
-
-        eprintln!("{:?}", cycle);
-    }
-
-    #[test]
     fn test_no_euler_cycle() {
-        let arcs: Vec<(usize, usize)> = vec![(1, 2), (2, 3), (3, 4), (4, 1), (5, 5)];
+        let arcs: Vec<(usize, usize)> = vec![(5, 5), (1, 2), (2, 3), (3, 4), (4, 1), (5, 5)];
 
         let cycle = euler_cycle(arcs.as_slice());
 

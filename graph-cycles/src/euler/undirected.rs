@@ -45,6 +45,7 @@ mod test {
     #[test]
     fn test_find_euler_cycle() {
         let arcs = vec![
+            (10, 17),
             (1, 2),
             (1, 10),
             (2, 3),
@@ -74,6 +75,7 @@ mod test {
     #[test]
     fn test_no_euler_cycle() {
         let arcs = vec![
+            (13, 20),
             (1, 2),
             (1, 10),
             (2, 3),

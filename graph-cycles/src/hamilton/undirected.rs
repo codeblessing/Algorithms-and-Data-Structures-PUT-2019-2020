@@ -1,6 +1,7 @@
 use crate::graph::AdjacencyMatrix;
 use std::sync::mpsc;
 use std::thread;
+use log::debug;
 
 pub fn hamilton_cycle(graph: AdjacencyMatrix) -> Option<Vec<usize>> {
     let size = graph.matrix().len();
@@ -29,8 +30,10 @@ pub fn hamilton_cycle(graph: AdjacencyMatrix) -> Option<Vec<usize>> {
 
     for msg in rx {
         cycle = Some(msg);
+        debug!("Found cycle: {:?}", cycle);
         break;
     }
+    debug!("After message loop: {:?}", cycle);
 
     if cycle.is_none() {
         println!("Graf wejściowy jest acykliczny (nie zawiera cyklu Hamiltona)");

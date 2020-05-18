@@ -82,12 +82,9 @@ where
     B: Into<Vec<(usize, usize)>>,
 {
     fn from(arcs: B) -> Self {
-        let arcs = arcs.into();
-        let nodes = arcs.iter().fold(HashSet::new(), |mut nodes, &(a, b)| {
-            nodes.insert(a);
-            nodes.insert(b);
-            nodes
-        });
+        let mut arcs: Vec<(usize, usize)> = arcs.into();
+        let node_count = arcs.remove(0).0;
+        let nodes: HashSet<usize> = (1..=node_count).collect();
 
         let nodes_count = nodes.len() + 1;
 
@@ -190,9 +187,11 @@ where
     B: Into<Vec<(usize, usize)>>,
 {
     fn from(arcs: B) -> Self {
-        let arcs = arcs.into();
+        let mut arcs: Vec<(usize, usize)> = arcs.into();
 
-        let mut nodes: HashSet<usize> = HashSet::new();
+        let node_count = arcs.remove(0).0;
+        let nodes: HashSet<usize> = (1..=node_count).collect();
+
         let mut list: HashMap<usize, Vec<usize>> = HashMap::new();
         for (from, to) in arcs {
             list.entry(from)
@@ -202,9 +201,6 @@ where
                     }
                 })
                 .or_insert_with(|| vec![to]);
-
-            nodes.insert(from);
-            nodes.insert(to);
         }
 
         for node in nodes {

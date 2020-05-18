@@ -18,6 +18,7 @@ fn main() {
 
     if args.is_present("file") {
         if let Ok(content) = fs::read_to_string(args.value_of("file").unwrap()) {
+            info!("{:?}", content);
             arcs = parse_input(content);
         } else {
             warn!(
@@ -58,11 +59,10 @@ fn main() {
             }
         }
 
-        line.clear();
+        // line.clear();
 
         for _ in 0..arc_count {
             std::io::stdin().read_line(&mut line).unwrap_or(0);
-            // line.push('\n');
         }
 
         arcs = parse_input(line);
@@ -71,30 +71,30 @@ fn main() {
     let adjacency_matrix = AdjacencyMatrix::from(arcs.clone());
     let successors_list = SuccessorsList::from(arcs);
 
-    test!(
-        10,
-        "./out/ham_direct",
-        hamilton::directed::hamilton_cycle,
-        successors_list.clone()
-    );
-    test!(
-        10,
-        "./out/ham_undire",
-        hamilton::undirected::hamilton_cycle,
-        adjacency_matrix.clone()
-    );
-    test!(
-        10,
-        "./out/eul_direct",
-        euler::directed::euler_cycle,
-        successors_list.clone()
-    );
-    test!(
-        10,
-        "./out/eul_undire",
-        euler::undirected::euler_cycle,
-        adjacency_matrix.clone()
-    );
+    // test!(
+    //     10,
+    //     "./out/ham_direct",
+    //     hamilton::directed::hamilton_cycle,
+    //     successors_list.clone()
+    // );
+    // test!(
+    //     10,
+    //     "./out/ham_undire",
+    //     hamilton::undirected::hamilton_cycle,
+    //     adjacency_matrix.clone()
+    // );
+    // test!(
+    //     10,
+    //     "./out/eul_direct",
+    //     euler::directed::euler_cycle,
+    //     successors_list.clone()
+    // );
+    // test!(
+    //     10,
+    //     "./out/eul_undire",
+    //     euler::undirected::euler_cycle,
+    //     adjacency_matrix.clone()
+    // );
 
     let hamilton_directed = hamilton::directed::hamilton_cycle(successors_list.clone());
     let hamilton_undirected = hamilton::undirected::hamilton_cycle(adjacency_matrix.clone());
@@ -139,7 +139,7 @@ fn parse_input(input: String) -> Vec<(usize, usize)> {
     for line in input.lines() {
         info!("{}", line);
         let mut nodes: Vec<_> = line
-            .split_whitespace()
+            .split_ascii_whitespace()
             .map(|node| node.parse::<usize>())
             .collect();
 
@@ -167,7 +167,7 @@ fn setup_logger() -> Result<(), fern::InitError> {
             ))
         })
         .level(log::LevelFilter::Debug)
-        .chain(std::io::stdout())
+        .chain(std::io::stderr())
         .chain(fern::log_file("./logfile.log")?)
         .apply()?;
     Ok(())

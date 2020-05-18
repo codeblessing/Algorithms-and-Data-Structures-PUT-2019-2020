@@ -1,6 +1,8 @@
 *.json
+*.txt
 *.log
 /www
 /target
 /pkg
 /out
+/in

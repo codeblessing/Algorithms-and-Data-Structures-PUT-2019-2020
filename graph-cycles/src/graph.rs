@@ -62,8 +62,18 @@ impl AdjacencyMatrix {
     }
 
     /// Returns adjacency matrix as two-dimensional `Vec`.
-    pub fn matrix(&self) -> Vec<Vec<u8>> {
+    pub fn matrix_mut(&self) -> Vec<Vec<u8>> {
         self.matrix.clone()
+    }
+    
+    /// Returns reference to adjacency matrix as two-dimensional `Vec`.
+    pub fn matrix(&self) -> &Vec<Vec<u8>> {
+        &self.matrix
+    }
+    
+    /// Returns reference to nodes.
+    pub fn nodes(&self) -> &HashSet<usize> {
+        &self.nodes
     }
 }
 

@@ -1,92 +1,111 @@
-// use crate::graph::AdjacencyMatrix;
+use crate::graph::AdjacencyMatrix;
 
-// pub fn euler_cycle(mut graph: AdjacencyMatrix) -> Result<Vec<usize>, ()> {
-//     let size = graph.matrix().len();
+pub fn euler_cycle<T>(graph: T) -> Option<Vec<usize>>
+where
+    T: Into<AdjacencyMatrix>,
+{
+    let mut graph = graph.into();
+    let size = graph.matrix().len();
 
-//     if (1..size).any(|vert| graph.deg(vert) % 2 == 1) {
-//         println!("Graf wejściowy jest acykliczny (Nie zawiera cyklu Eulera).");
-//         return Err(());
-//     }
+    if size < 3 || (1..size).any(|vert| graph.deg(vert).unwrap() % 2 == 1) {
+        println!("Graf wejściowy jest acykliczny (Nie zawiera cyklu Eulera).");
+        return None;
+    }
 
-//     let mut cycle: Vec<usize> = Vec::new();
-//     let vertex: usize = 1;
+    let mut cycle: Vec<usize> = Vec::new();
+    let vertex: usize = 1;
 
-//     find_euler_cycle(vertex, &mut graph, &mut cycle);
+    find_euler_cycle(vertex, &mut graph, &mut cycle);
 
-//     if graph.has_edges() {
-//         println!("Graf wejściowy jest acykliczny (Nie zawiera cyklu Eulera).");
-//         return Err(());
-//     }
+    if graph.has_edges() {
+        println!("Graf wejściowy jest acykliczny (Nie zawiera cyklu Eulera).");
+        return None;
+    }
 
-//     Ok(cycle)
-// }
+    Some(cycle)
+}
 
-// fn find_euler_cycle(vertex: usize, matrix: &mut AdjacencyMatrix, stack: &mut Vec<usize>) {
-//     loop {
-//         match matrix.next(vertex) {
-//             None => break,
-//             Some(next) => {
-//                 matrix.remove_edge(vertex, next).unwrap_or(());
-//                 find_euler_cycle(next, matrix, stack);
-//             }
-//         }
-//     }
-//     stack.push(vertex);
-// }
+fn find_euler_cycle(vertex: usize, matrix: &mut AdjacencyMatrix, stack: &mut Vec<usize>) {
+    loop {
+        match matrix.next(vertex) {
+            None => break,
+            Some(next) => {
+                matrix.remove_edge(vertex, next);
+                find_euler_cycle(next, matrix, stack);
+            }
+        }
+    }
+    stack.push(vertex);
+}
 
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-//     use crate::graph::AdjacencyMatrix;
+#[cfg(test)]
+mod test {
+    use super::*;
 
-//     #[test]
-//     fn test_find_euler_cycle() {
-//         let matrix: Vec<Vec<u8>> = vec![
-//             vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-//             vec![0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-//             vec![0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-//             vec![0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1],
-//             vec![0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0],
-//             vec![0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0],
-//             vec![0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0],
-//             vec![0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1],
-//             vec![0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0],
-//             vec![0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-//             vec![0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0],
-//         ];
+    #[test]
+    fn test_find_euler_cycle() {
+        let arcs = vec![
+            (1, 2),
+            (1, 10),
+            (2, 3),
+            (3, 4),
+            (3, 5),
+            (3, 10),
+            (4, 5),
+            (4, 6),
+            (4, 8),
+            (5, 6),
+            (5, 7),
+            (6, 7),
+            (6, 8),
+            (7, 8),
+            (7, 10),
+            (8, 9),
+            (9, 10),
+        ];
 
-//         let matrix = AdjacencyMatrix::from(matrix);
+        let cycle = euler_cycle(arcs);
 
-//         let cycle = euler_cycle(matrix);
+        assert!(cycle.is_some());
 
-//         assert!(cycle.is_ok());
+        eprintln!("{:?}", cycle);
+    }
 
-//         eprintln!("{:?}", cycle.unwrap());
-//     }
+    #[test]
+    fn test_no_euler_cycle() {
+        let arcs = vec![
+            (1, 2),
+            (1, 10),
+            (2, 3),
+            (3, 4),
+            (3, 5),
+            (3, 10),
+            (4, 5),
+            (4, 6),
+            (4, 8),
+            (5, 6),
+            (5, 7),
+            (6, 7),
+            (6, 8),
+            (7, 8),
+            (7, 10),
+            (8, 9),
+            (9, 10),
+            (11, 12),
+            (11, 13),
+            (12, 13),
+        ];
 
-//     #[test]
-//     fn test_no_euler_cycle() {
-//         let matrix: Vec<Vec<u8>> = vec![
-//             vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-//             vec![0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-//             vec![0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-//             vec![0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0],
-//             vec![0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0],
-//             vec![0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0],
-//             vec![0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0],
-//             vec![0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0],
-//             vec![0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0],
-//             vec![0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
-//             vec![0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
-//             vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
-//             vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-//             vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0],
-//         ];
+        let cycle = euler_cycle(arcs);
 
-//         let matrix = AdjacencyMatrix::from(matrix);
+        assert!(cycle.is_none());
+    }
 
-//         let cycle = euler_cycle(matrix);
+    #[test]
+    fn test_run_with_empty() {
+        let matrix = AdjacencyMatrix::new();
+        let cycle = euler_cycle(matrix);
 
-//         assert!(cycle.is_err());
-//     }
-// }
+        assert!(cycle.is_none());
+    }
+}

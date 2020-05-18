@@ -16,16 +16,11 @@ pub fn hamilton_cycle(graph: SuccessorsList) -> Option<Vec<usize>> {
         let transmitter = mpsc::Sender::clone(&tx);
         let list = graph.clone();
         thread::spawn(move || {
-            loop {
                 let cycle = cycle_from_node(list.clone(), vert);
-                match cycle {
-                    Some(val) => {
-                        debug!("Thread {}: cycle: {:?}", vert, val);
-                        transmitter.send(val).unwrap_or(());
-                    }
-                    None => break,
+                if let Some(val) = cycle {
+                    debug!("Thread {}: cycle: {:?}", vert, val);
+                    transmitter.send(val).unwrap_or(());
                 }
-            }
         });
     }
 
@@ -123,7 +118,6 @@ fn check_edge(from: usize, to: usize, list: &SuccessorsList) -> bool {
 mod test {
     use super::*;
     use crate::graph::SuccessorsList;
-    use log::info;
 
     #[test]
     fn test_find_hamilton_cycle() {

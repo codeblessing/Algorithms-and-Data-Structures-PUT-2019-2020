@@ -2,7 +2,7 @@ use crate::object::*;
 use std::sync::mpsc;
 
 /// Returns `Vec` of positions in `objs` and maximum value.
-fn knapsack<T>(sack: Knapsack, objs: T, thread_count: u8) -> (Vec<usize>, usize, usize)
+pub fn knapsack<T>(sack: Knapsack, objs: T, thread_count: u8) -> (Vec<usize>, usize, usize)
 where
     T: Into<Vec<Object>>,
 {

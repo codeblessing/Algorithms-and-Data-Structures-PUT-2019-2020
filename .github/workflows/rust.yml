@@ -5,6 +5,8 @@ on:
     branches: 
       - sorting
       - graphs
+      - graph-cycles
+      - knapsack
 
 jobs:
   build:

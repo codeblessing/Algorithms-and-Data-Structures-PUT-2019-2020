@@ -8,6 +8,9 @@ on:
       - graph-cycles
       - knapsack
 
+env:
+  rust-dir: ./knapsack
+
 jobs:
   build:
 
@@ -20,8 +23,8 @@ jobs:
         path: ./cache
         key:  ${{ runner.os }}-cached
     - name: Build
+      working-directory: env.rust-dir
       run: cargo build --verbose
     - name: Run tests
+      working-directory: env.rust-dir
       run: cargo test --verbose
-    - name: Make docs
-      run: cargo doc --verbose

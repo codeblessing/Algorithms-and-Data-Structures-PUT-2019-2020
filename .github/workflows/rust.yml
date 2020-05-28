@@ -23,8 +23,8 @@ jobs:
         path: ./cache
         key:  ${{ runner.os }}-cached
     - name: Build
-      working-directory: env.rust-dir
+      working-directory: ${{ env.rust-dir }}
       run: cargo build --verbose
     - name: Run tests
-      working-directory: env.rust-dir
+      working-directory: ${{ env.rust-dir }}
       run: cargo test --verbose

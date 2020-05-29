@@ -1,4 +1,7 @@
-use std::{error::Error, str::FromStr};
+use std::str::FromStr;
+use failure::{Fail, Error};
+use regex::Regex;
+use lazy_static::lazy_static;
 
 static mut OBJECT_ID: usize = 1; 
 #[derive(Clone, Copy)]
@@ -26,59 +29,38 @@ impl Object {
 }
 
 impl FromStr for Object {
-    type Err = Box<dyn Error>;
+    type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let tokens: Vec<&str> = s.split_whitespace().collect();
-        match tokens.len() {
-            2 => {
-                let weight = tokens[0].parse()?;
-                let value = tokens[1].parse()?;
-                let id = unsafe { OBJECT_ID };
-                unsafe { OBJECT_ID += 1; }
-                Ok(Object {id, name: "".to_owned(), weight, value} )
-            },
-            3 => {
-                let id = tokens[0].parse()?;
-                let weight = tokens[1].parse()?;
-                let value = tokens[2].parse()?;
-                unsafe { OBJECT_ID = id + 1; }
-                Ok(Object {id, name: "".to_owned(), weight, value} )
-            }
-            4 => {
-                let id = tokens[0].parse()?;
-                let name = tokens[1].to_owned();
-                let weight = tokens[2].parse()?;
-                let value = tokens[3].parse()?;
-                unsafe { OBJECT_ID = id + 1; }
-                Ok(Object {id, name, weight, value} )
-            }
-            _ => Err(Box::from(ObjectParseError{}))
+        lazy_static!{
+            static ref SIMPLE: Regex = Regex::new(r"^\s*(?P<weight>\d+)\s+(?P<value>\d+)\s*$").unwrap();
+            static ref FULL: Regex = Regex::new(r"^\s*(?P<id>\d*)\s*(?P<name>[a-zA-ZĄĆĘŁŃÓŚŹŻąćęłńóśźż\s]*)\s*(?P<weight>\d+)\s+(?P<value>\d+)\s*$").unwrap();
+        }
+
+        let simple_state = SIMPLE.captures(s);
+        if let Some(captures) = simple_state {
+            let id = unsafe { OBJECT_ID };
+            let name = "".to_owned();
+            let weight = captures["weight"].parse()?;
+            let value = captures["value"].parse()?;
+            unsafe { OBJECT_ID += 1; }
+            return Ok(Self { id, name, weight, value });
+        } else {
+            let captures = FULL.captures(s).ok_or(ObjectParseError{})?;
+            let id = if &captures["id"] == "" { unsafe { OBJECT_ID } } else { captures["id"].parse()? };
+            let name = captures["name"].to_owned();
+            let weight = captures["weight"].parse()?;
+            let value = captures["value"].parse()?;
+            return Ok(Self { id, name, weight, value });
         }
     }
 }
 
 impl std::fmt::Display for Object {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f,
-r"{}:
-    id: {}
-    waga: {}
-    wartość: {}
-", self.name, self.id, self.weight, self.value )
+        write!(f, "{}:\n\tid: {}\n\twaga: {}\n\twartość: {}", self.name, self.id, self.weight, self.value )
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Fail)]
+#[fail(display = "Nie można stworzyć przedmiotu.")]
 struct ObjectParseError {}
-
-impl std::fmt::Display for ObjectParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Cannot parse Object")
-    }
-}
-
-impl std::error::Error for ObjectParseError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        None
-    }
-}

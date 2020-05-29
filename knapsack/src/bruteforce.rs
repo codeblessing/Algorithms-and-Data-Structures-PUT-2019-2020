@@ -2,11 +2,7 @@ use crate::object::*;
 use std::sync::mpsc;
 
 /// Returns `Vec` of positions in `objs` and maximum value.
-pub fn knapsack<T>(sack: Knapsack, objs: T, thread_count: u8) -> (Vec<usize>, usize, usize)
-where
-    T: Into<Vec<Object>>,
-{
-    let objs: Vec<Object> = objs.into();
+pub fn pack_a_ruck(sack: Knapsack, objs: &Vec<Object>, thread_count: u8) -> Vec<Object> {
     let case_count = (2 << objs.len()) - 1;
 
     let (tx, rx) = mpsc::channel();
@@ -25,7 +21,7 @@ where
 
     drop(tx);
 
-    let mut solutions: Vec<(usize, usize, usize)> = Vec::new();
+    let mut solutions = Vec::new();
 
     for msg in rx {
         if msg.1 <= sack.capacity {
@@ -33,83 +29,93 @@ where
         }
     }
 
-    let max = solutions.iter().max_by(|x, y| x.2.cmp(&y.2)).unwrap();
-    let mut positions: Vec<usize> = Vec::new();
-    let mut id = 1;
+    let (max, ..) = solutions
+        .iter()
+        .max_by(|(.., x), (.., y)| x.cmp(&y))
+        .unwrap()
+        .clone();
 
-    for idx in 0..objs.len() {
-        dbg!(idx);
-        if (id & max.0) != 0 {
-            positions.push(idx);
-        }
-        id <<= 1;
-    }
-
-    (positions, max.1, max.2)
+    max
 }
 
 /// Returns `ids`, weight and value
-fn pack(ids: usize, objs: &Vec<Object>) -> (usize, usize, usize) {
+fn pack(ids: usize, objs: &Vec<Object>) -> (Vec<Object>, usize, usize) {
     let mut id: usize = 1;
     let mut weight: usize = 0;
     let mut value: usize = 0;
+    let mut objects: Vec<Object> = Vec::new();
+
     for object in objs {
         if (ids & id) != 0 {
+            objects.push(object.clone());
             weight += object.weight;
             value += object.value;
         }
         id <<= 1;
     }
 
-    dbg!(ids, weight, value)
+    dbg!(objects, weight, value)
 }
 
 #[cfg(test)]
 mod test_bruteforce {
     use super::*;
+    use std::collections::HashSet;
 
     #[test]
     fn test_find_optimal() {
         let mut objects: Vec<Object> = Vec::new();
-        objects.push(Object { weight: 2, value: 6 });
-        objects.push(Object { weight: 4, value: 4 });
-        objects.push(Object { weight: 1, value: 3 });
-        objects.push(Object { weight: 2, value: 4 });
-        objects.push(Object { weight: 1, value: 5 });
+        objects.push(Object::from(1, "", 2, 6));
+        objects.push(Object::from(2, "", 4, 4));
+        objects.push(Object::from(3, "", 1, 3));
+        objects.push(Object::from(4, "", 2, 4));
+        objects.push(Object::from(5, "", 1, 5));
         let sack = Knapsack { capacity: 8 };
-        
-        let optimal = knapsack(sack, objects, 4);
 
-        assert_eq!(optimal, (vec![0, 2, 3, 4], 6, 18));
+        let optimal = pack_a_ruck(sack, &objects, 4);
+        let weight: usize = optimal.iter().map(|obj| obj.weight).sum();
+        let value: usize = optimal.iter().map(|obj| obj.value).sum();
+        let ids: HashSet<usize> = optimal.iter().map(|obj| obj.id).collect();
+
+        let expected_ids: HashSet<usize> = [1, 3, 4, 5].iter().copied().collect();
+
+        assert_eq!(weight, 6);
+        assert_eq!(value, 18);
+        assert_eq!(ids, expected_ids);
     }
 
     #[test]
     fn test_no_solution() {
         let mut objects: Vec<Object> = Vec::new();
-        objects.push(Object { weight: 9, value: 6 });
-        objects.push(Object { weight: 13, value: 4 });
-        objects.push(Object { weight: 22, value: 3 });
-        objects.push(Object { weight: 10, value: 4 });
-        objects.push(Object { weight: 15, value: 5 });
+        objects.push(Object::from(1, "", 9, 6));
+        objects.push(Object::from(2, "", 13, 4));
+        objects.push(Object::from(3, "", 22, 3));
+        objects.push(Object::from(4, "", 10, 4));
+        objects.push(Object::from(5, "", 15, 5));
         let sack = Knapsack { capacity: 8 };
-        
-        let optimal = knapsack(sack, objects, 4);
 
-        assert_eq!(optimal, (vec![], 0, 0));
+        let optimal = pack_a_ruck(sack, &objects, 4);
+
+        assert_eq!(optimal, Vec::new());
     }
 
     #[test]
     fn test_one_solution() {
         let mut objects: Vec<Object> = Vec::new();
-        objects.push(Object { weight: 8, value: 6 });
-        objects.push(Object { weight: 13, value: 4 });
-        objects.push(Object { weight: 22, value: 3 });
-        objects.push(Object { weight: 10, value: 4 });
-        objects.push(Object { weight: 15, value: 5 });
-        let sack = Knapsack { capacity: 8 };
-        
-        let optimal = knapsack(sack, objects, 4);
+        objects.push(Object::from(1, "", 8, 6));
+        objects.push(Object::from(2, "", 13, 4));
+        objects.push(Object::from(3, "", 22, 3));
+        objects.push(Object::from(4, "", 10, 4));
+        objects.push(Object::from(5, "", 15, 5));
+        let ruck = Knapsack { capacity: 8 };
 
-        assert_eq!(optimal, (vec![0], 8, 6));
+        let optimal = pack_a_ruck(ruck, &objects, 4);
+        let weight: usize = optimal.iter().map(|obj| obj.weight).sum();
+        let value: usize = optimal.iter().map(|obj| obj.value).sum();
+        let ids: Vec<usize> = optimal.iter().map(|obj| obj.id).collect();
+
+        assert_eq!(weight, 8);
+        assert_eq!(value, 6);
+        assert_eq!(ids, vec![1]);
     }
 }

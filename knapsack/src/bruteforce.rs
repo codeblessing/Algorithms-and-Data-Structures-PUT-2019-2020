@@ -1,7 +1,6 @@
 use crate::object::*;
 use std::sync::mpsc;
 
-/// Returns `Vec` of positions in `objs` and maximum value.
 pub fn pack_a_ruck(sack: Knapsack, objs: &Vec<Object>, thread_count: u8) -> Vec<Object> {
     let case_count = (2 << objs.len()) - 1;
 
@@ -54,7 +53,7 @@ fn pack(ids: usize, objs: &Vec<Object>) -> (Vec<Object>, usize, usize) {
         id <<= 1;
     }
 
-    dbg!(objects, weight, value)
+    (objects, weight, value)
 }
 
 #[cfg(test)]

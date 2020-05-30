@@ -41,11 +41,11 @@ fn main() {
     for object in brutally_packed_rucksack {
         println!("{}", object);
     }
-    println!("Plecak spakowany zachłannie:");
+    println!("\nPlecak spakowany zachłannie:");
     for object in greedily_packed_rucksack {
         println!("{}", object);
     }
-    println!("Plecak spakowany dynamicznie:");
+    println!("\nPlecak spakowany dynamicznie:");
     for object in dynamically_packed_rucksack {
         println!("{}", object);
     }

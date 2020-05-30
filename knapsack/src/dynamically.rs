@@ -18,7 +18,7 @@ fn create_dynamic_matrix(knapsack: Knapsack, objects: &Vec<Object>) -> Array2D {
     let mut matrix: Vec<Vec<usize>> = vec![vec![0; columns]; rows];
     
     for row in 1..rows {
-        for column in 1..=knapsack.capacity {
+        for column in 1..columns {
             let last_optimal = matrix[row - 1][column];
             let object = &objects[row - 1];
             

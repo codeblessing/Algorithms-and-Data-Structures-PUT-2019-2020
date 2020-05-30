@@ -7,7 +7,7 @@ pub fn pack_a_ruck(sack: Knapsack, objs: &Vec<Object>, _thread_count: u8) -> Vec
 
     for i in 1..case_count {
         if let Some(out) = pack(i, sack.capacity, &objs) {
-            if out.2 > solution.2 {
+            if out.2 > solution.2 || (out.2 == solution.2 && out.1 < solution.1) {
                 drop(solution.0);
                 solution = out;
             }

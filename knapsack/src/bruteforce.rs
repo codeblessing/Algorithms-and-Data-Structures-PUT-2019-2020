@@ -1,59 +1,43 @@
 use crate::object::*;
-use std::sync::mpsc;
 
-pub fn pack_a_ruck(sack: Knapsack, objs: &Vec<Object>, thread_count: u8) -> Vec<Object> {
-    let case_count = (2 << objs.len()) - 1;
+pub fn pack_a_ruck(sack: Knapsack, objs: &Vec<Object>, _thread_count: u8) -> Vec<Object> {
+    let case_count = 2 << objs.len();
 
-    let (tx, rx) = mpsc::channel();
-    let pool = threadpool::Builder::new()
-        .num_threads(thread_count as usize)
-        .build();
+    let mut solution: (Vec<Object>, usize, usize) = (Vec::new(), 0, 0);
 
-    for id in 1..case_count {
-        let transmitter = mpsc::Sender::clone(&tx);
-        let objects = objs.clone();
-        pool.execute(move || {
-            let out = pack(id, &objects);
-            transmitter.send(out).unwrap_or(());
-        })
-    }
-
-    drop(tx);
-
-    let mut solutions = Vec::new();
-
-    for msg in rx {
-        if msg.1 <= sack.capacity {
-            solutions.push(msg);
+    for i in 1..case_count {
+        if let Some(out) = pack(i, sack.capacity, &objs) {
+            if out.2 > solution.2 {
+                drop(solution.0);
+                solution = out;
+            }
         }
     }
 
-    let (max, ..) = solutions
-        .iter()
-        .max_by(|(.., x), (.., y)| x.cmp(&y))
-        .unwrap()
-        .clone();
-
-    max
+    solution.0
 }
 
 /// Returns `ids`, weight and value
-fn pack(ids: usize, objs: &Vec<Object>) -> (Vec<Object>, usize, usize) {
+fn pack(ids: usize, max_weight: usize, objs: &Vec<Object>) -> Option<(Vec<Object>, usize, usize)> {
     let mut id: usize = 1;
     let mut weight: usize = 0;
     let mut value: usize = 0;
-    let mut objects: Vec<Object> = Vec::new();
+    let mut objects: Vec<Object> = Vec::with_capacity(objs.len());
 
     for object in objs {
         if (ids & id) != 0 {
-            objects.push(object.clone());
             weight += object.weight;
             value += object.value;
+            objects.push(object.clone());
         }
         id <<= 1;
     }
 
-    (objects, weight, value)
+    if weight > max_weight {
+        None
+    } else {
+        Some((objects, weight, value))
+    }
 }
 
 #[cfg(test)]

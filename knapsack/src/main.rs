@@ -6,8 +6,8 @@ mod object;
 use clap::{App, Arg, ArgMatches};
 use failure::{Error, Fail};
 use lazy_static::lazy_static;
-use object::{Knapsack, Object};
 use regex::Regex;
+use object::{Knapsack, Object};
 use std::fs;
 
 fn main() {
@@ -28,6 +28,7 @@ fn main() {
         knapsack = ruck;
         objects = objs;
     } else {
+        eprintln!("Plik nie został wczytany.");
         let (ruck, objs) = read_from_console();
         knapsack = ruck;
         objects = objs;

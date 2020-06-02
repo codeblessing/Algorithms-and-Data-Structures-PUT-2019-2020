@@ -219,7 +219,7 @@ fn read_from_console() -> (Knapsack, Vec<Object>) {
 
     while object_count > 0 {
         line.clear();
-        println!("Podaj dane przedmiotu [pozostały {} przedmiotów]:", object_count);
+        println!("Podaj dane przedmiotu [pozostało {} przedmiotów]:", object_count);
         let state = std::io::stdin().read_line(&mut line).ok();
         line = line.trim().to_owned();
         if state.is_some() && !line.is_empty() {

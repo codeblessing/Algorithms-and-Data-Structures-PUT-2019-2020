@@ -1,6 +1,6 @@
 use crate::object::*;
 
-pub fn pack_a_ruck(sack: Knapsack, objs: &Vec<Object>, _thread_count: u8) -> Vec<Object> {
+pub fn pack_a_ruck(sack: Knapsack, objs: &Vec<Object>) -> Vec<Object> {
     let case_count = 2 << objs.len();
 
     let mut solution: (Vec<Object>, usize, usize) = (Vec::new(), 0, 0);
@@ -55,7 +55,7 @@ mod test_bruteforce {
         objects.push(Object::from(5, "", 1, 5));
         let sack = Knapsack { capacity: 8 };
 
-        let optimal = pack_a_ruck(sack, &objects, 4);
+        let optimal = pack_a_ruck(sack, &objects);
         let weight: usize = optimal.iter().map(|obj| obj.weight).sum();
         let value: usize = optimal.iter().map(|obj| obj.value).sum();
         let ids: HashSet<usize> = optimal.iter().map(|obj| obj.id).collect();
@@ -77,7 +77,7 @@ mod test_bruteforce {
         objects.push(Object::from(5, "", 15, 5));
         let sack = Knapsack { capacity: 8 };
 
-        let optimal = pack_a_ruck(sack, &objects, 4);
+        let optimal = pack_a_ruck(sack, &objects);
 
         assert_eq!(optimal, Vec::new());
     }
@@ -92,7 +92,7 @@ mod test_bruteforce {
         objects.push(Object::from(5, "", 15, 5));
         let ruck = Knapsack { capacity: 8 };
 
-        let optimal = pack_a_ruck(ruck, &objects, 4);
+        let optimal = pack_a_ruck(ruck, &objects);
         let weight: usize = optimal.iter().map(|obj| obj.weight).sum();
         let value: usize = optimal.iter().map(|obj| obj.value).sum();
         let ids: Vec<usize> = optimal.iter().map(|obj| obj.id).collect();

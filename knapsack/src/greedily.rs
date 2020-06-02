@@ -36,16 +36,11 @@ pub fn pack_a_ruck(knapsack: Knapsack, objects: &Vec<Object>) -> Vec<Object> {
         },
     );
 
-    dbg!(&objects);
-
     let mut current_weight: usize = 0;
     let mut current_value: usize = 0;
     let mut packed: Vec<Object> = Vec::new();
 
     while !objects.is_empty() {
-        dbg!(current_weight);
-        dbg!(current_value);
-        dbg!(objects[0].weight);
         if current_weight + objects[0].weight <= knapsack.capacity {
             let object = objects.remove(0);
             current_weight += object.weight;
